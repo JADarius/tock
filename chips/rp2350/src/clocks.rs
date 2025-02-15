@@ -1,10 +1,8 @@
-// Licensed under the Apache License, Version 2.0 or the MIT License.
-// SPDX-License-Identifier: Apache-2.0 OR MIT
-// Copyright Tock Contributors 2022.
-
 use core::cell::Cell;
-use kernel::utilities::registers::interfaces::{ReadWriteable, Readable, Writeable};
-use kernel::utilities::registers::{register_bitfields, register_structs, ReadOnly, ReadWrite};
+use kernel::utilities::registers::{
+    interfaces::{ReadWriteable, Readable, Writeable},
+    register_bitfields, register_structs, ReadOnly, ReadWrite,
+};
 use kernel::utilities::StaticRef;
 
 register_structs! {
@@ -22,735 +20,825 @@ register_structs! {
         (0x000 => clk_gpio: [GpioClockRegisters; 4]),
         /// Clock control, can be changed on-the-fly (except for auxsrc)
         (0x030 => clk_ref_ctrl: ReadWrite<u32, CLK_REF_CTRL::Register>),
-        /// Clock divisor, can be changed on-the-fly
+
         (0x034 => clk_ref_div: ReadWrite<u32>),
         /// Indicates which src is currently selected (one-hot)
-        (0x038 => clk_ref_selected: ReadOnly<u32, CLK_REF_SELECTED::Register>),
+        (0x038 => clk_ref_selected: ReadWrite<u32, CLK_REF_SELECTED::Register>),
         /// Clock control, can be changed on-the-fly (except for auxsrc)
         (0x03C => clk_sys_ctrl: ReadWrite<u32, CLK_SYS_CTRL::Register>),
-        /// Clock divisor, can be changed on-the-fly
+
         (0x040 => clk_sys_div: ReadWrite<u32, CLK_SYS_DIV::Register>),
         /// Indicates which src is currently selected (one-hot)
-        (0x044 => clk_sys_selected: ReadOnly<u32, CLK_SYS_SELECTED::Register>),
+        (0x044 => clk_sys_selected: ReadWrite<u32, CLK_SYS_SELECTED::Register>),
         /// Clock control, can be changed on-the-fly (except for auxsrc)
         (0x048 => clk_peri_ctrl: ReadWrite<u32, CLK_PERI_CTRL::Register>),
-        (0x04C => _reserved0),
-        /// Indicates which src is currently selected (one-hot)
-        (0x050 => clk_peri_selected: ReadOnly<u32, CLK_PERI_SELECTED::Register>),
-        /// Clock control, can be changed on-the-fly (except for auxsrc)
-        (0x054 => clk_usb_ctrl: ReadWrite<u32, CLK_USB_CTRL::Register>),
-        /// Clock divisor, can be changed on-the-fly
-        (0x058 => clk_usb_div: ReadWrite<u32>),
-        /// Indicates which src is currently selected (one-hot)
-        (0x05C => clk_usb_selected: ReadOnly<u32, CLK_USB_SELECTED::Register>),
-        /// Clock control, can be changed on-the-fly (except for auxsrc)
-        (0x060 => clk_adc_ctrl: ReadWrite<u32, CLK_ADC_CTRL::Register>),
-        /// Clock divisor, can be changed on-the-fly
-        (0x064 => clk_adc_div: ReadWrite<u32>),
-        /// Indicates which src is currently selected (one-hot)
-        (0x068 => clk_adc_selected: ReadOnly<u32, CLK_ADC_SELECTED::Register>),
-        /// Clock control, can be changed on-the-fly (except for auxsrc)
-        (0x06C => clk_rtc_ctrl: ReadWrite<u32, CLK_RTC_CTRL::Register>),
-        /// Clock divisor, can be changed on-the-fly
-        (0x070 => clk_rtc_div: ReadWrite<u32, CLK_RTC_DIV::Register>),
-        /// Indicates which src is currently selected (one-hot)
-        (0x074 => clk_rtc_selected: ReadOnly<u32, CLK_RTC_SELECTED::Register>),
 
-        (0x078 => clk_sys_resus_ctrl: ReadWrite<u32, CLK_SYS_RESUS_CTRL::Register>),
+        (0x04C => clk_peri_div: ReadWrite<u32>),
+        /// Indicates which src is currently selected (one-hot)
+        (0x050 => clk_peri_selected: ReadWrite<u32>),
+        /// Clock control, can be changed on-the-fly (except for auxsrc)
+        (0x054 => clk_hstx_ctrl: ReadWrite<u32, CLK_HSTX_CTRL::Register>),
 
-        (0x07C => clk_sys_resus_status: ReadWrite<u32>),
+        (0x058 => clk_hstx_div: ReadWrite<u32>),
+        /// Indicates which src is currently selected (one-hot)
+        (0x05C => clk_hstx_selected: ReadWrite<u32>),
+        /// Clock control, can be changed on-the-fly (except for auxsrc)
+        (0x060 => clk_usb_ctrl: ReadWrite<u32, CLK_USB_CTRL::Register>),
+
+        (0x064 => clk_usb_div: ReadWrite<u32>),
+        /// Indicates which src is currently selected (one-hot)
+        (0x068 => clk_usb_selected: ReadWrite<u32>),
+        /// Clock control, can be changed on-the-fly (except for auxsrc)
+        (0x06C => clk_adc_ctrl: ReadWrite<u32, CLK_ADC_CTRL::Register>),
+
+        (0x070 => clk_adc_div: ReadWrite<u32>),
+        /// Indicates which src is currently selected (one-hot)
+        (0x074 => clk_adc_selected: ReadWrite<u32>),
+
+        (0x078 => dftclk_xosc_ctrl: ReadWrite<u32>),
+
+        (0x07C => dftclk_rosc_ctrl: ReadWrite<u32>),
+
+        (0x080 => dftclk_lposc_ctrl: ReadWrite<u32>),
+
+        (0x084 => clk_sys_resus_ctrl: ReadWrite<u32, CLK_SYS_RESUS_CTRL::Register>),
+
+        (0x088 => clk_sys_resus_status: ReadWrite<u32>),
         /// Reference clock frequency in kHz
-        (0x080 => fc0_ref_khz: ReadWrite<u32>),
+        (0x08C => fc0_ref_khz: ReadWrite<u32>),
         /// Minimum pass frequency in kHz. This is optional. Set to 0 if you are not using t
-        (0x084 => fc0_min_khz: ReadWrite<u32>),
+        (0x090 => fc0_min_khz: ReadWrite<u32>),
         /// Maximum pass frequency in kHz. This is optional. Set to 0x1ffffff if you are not
-        (0x088 => fc0_max_khz: ReadWrite<u32>),
+        (0x094 => fc0_max_khz: ReadWrite<u32>),
         /// Delays the start of frequency counting to allow the mux to settle
-        /// Delay is measured in multiples of the reference clock period
-        (0x08C => fc0_delay: ReadWrite<u32>),
+/// Delay is measured in multiples of the reference clock period
+        (0x098 => fc0_delay: ReadWrite<u32>),
         /// The test interval is 0.98us * 2**interval, but let's call it 1us * 2**interval
-        /// The default gives a test interval of 250us
-        (0x090 => fc0_interval: ReadWrite<u32>),
+/// The default gives a test interval of 250us
+        (0x09C => fc0_interval: ReadWrite<u32>),
         /// Clock sent to frequency counter, set to 0 when not required
-        /// Writing to this register initiates the frequency count
-        (0x094 => fc0_src: ReadWrite<u32>),
+/// Writing to this register initiates the frequency count
+        (0x0A0 => fc0_src: ReadWrite<u32>),
         /// Frequency counter status
-        (0x098 => fc0_status: ReadWrite<u32, FC0_STATUS::Register>),
+        (0x0A4 => fc0_status: ReadWrite<u32, FC0_STATUS::Register>),
         /// Result of frequency measurement, only valid when status_done=1
-        (0x09C => fc0_result: ReadWrite<u32, FC0_RESULT::Register>),
+        (0x0A8 => fc0_result: ReadWrite<u32, FC0_RESULT::Register>),
         /// enable clock in wake mode
-        (0x0A0 => wake_en0: ReadWrite<u32, WAKE_EN0::Register>),
+        (0x0AC => wake_en0: ReadWrite<u32, WAKE_EN0::Register>),
         /// enable clock in wake mode
-        (0x0A4 => wake_en1: ReadWrite<u32, WAKE_EN1::Register>),
+        (0x0B0 => wake_en1: ReadWrite<u32, WAKE_EN1::Register>),
         /// enable clock in sleep mode
-        (0x0A8 => sleep_en0: ReadWrite<u32, SLEEP_EN0::Register>),
+        (0x0B4 => sleep_en0: ReadWrite<u32, SLEEP_EN0::Register>),
         /// enable clock in sleep mode
-        (0x0AC => sleep_en1: ReadWrite<u32, SLEEP_EN1::Register>),
+        (0x0B8 => sleep_en1: ReadWrite<u32, SLEEP_EN1::Register>),
         /// indicates the state of the clock enable
-        (0x0B0 => enabled0: ReadWrite<u32, ENABLED0::Register>),
+        (0x0BC => enabled0: ReadWrite<u32, ENABLED0::Register>),
         /// indicates the state of the clock enable
-        (0x0B4 => enabled1: ReadWrite<u32, ENABLED1::Register>),
+        (0x0C0 => enabled1: ReadWrite<u32, ENABLED1::Register>),
         /// Raw Interrupts
-        (0x0B8 => intr: ReadWrite<u32>),
+        (0x0C4 => intr: ReadWrite<u32>),
         /// Interrupt Enable
-        (0x0BC => inte: ReadWrite<u32>),
+        (0x0C8 => inte: ReadWrite<u32>),
         /// Interrupt Force
-        (0x0C0 => intf: ReadWrite<u32>),
+        (0x0CC => intf: ReadWrite<u32>),
         /// Interrupt status after masking & forcing
-        (0x0C4 => ints: ReadWrite<u32>),
-        (0x0C8 => @END),
+        (0x0D0 => ints: ReadWrite<u32>),
+        (0x0D4 => @END),
     },
-    PllRegisters {
+     PllRegisters {
         /// Control and Status
-        /// GENERAL CONSTRAINTS:
-        /// Reference clock frequency min=5MHz, max=800MHz
-        /// Feedback divider min=16, max=320
-        /// VCO frequency min=400MHz, max=1600MHz
+/// GENERAL CONSTRAINTS:
+/// Reference clock frequency min=5MHz, max=800MHz
+/// Feedback divider min=16, max=320
+/// VCO frequency min=750MHz, max=1600MHz
         (0x000 => cs: ReadWrite<u32, CS::Register>),
         /// Controls the PLL power modes.
         (0x004 => pwr: ReadWrite<u32, PWR::Register>),
         /// Feedback divisor
-        /// (note: this PLL does not support fractional division)
+/// (note: this PLL does not support fractional division)
         (0x008 => fbdiv_int: ReadWrite<u32, FBDIV_INT::Register>),
         /// Controls the PLL post dividers for the primary output
-        /// (note: this PLL does not have a secondary output)
-        /// the primary output is driven from VCO divided by postdiv1*postdiv2
+/// (note: this PLL does not have a secondary output)
+/// the primary output is driven from VCO divided by postdiv1*po
         (0x00C => prim: ReadWrite<u32, PRIM::Register>),
-        (0x010 => @END),
+        /// Raw Interrupts
+        (0x010 => intr: ReadWrite<u32>),
+        /// Interrupt Enable
+        (0x014 => inte: ReadWrite<u32>),
+        /// Interrupt Force
+        (0x018 => intf: ReadWrite<u32>),
+        /// Interrupt status after masking & forcing
+        (0x01C => ints: ReadWrite<u32>),
+        (0x020 => @END),
     }
 }
-
 register_bitfields![u32,
-    CLK_GPOUTx_CTRL [
-        /// An edge on this signal shifts the phase of the output by 1 cycle of the input cl
-        /// This can be done at any time
-        NUDGE OFFSET(20) NUMBITS(1) [],
-        /// This delays the enable signal by up to 3 cycles of the input clock
-        /// This must be set before the clock is enabled to have any effect
-        PHASE OFFSET(16) NUMBITS(2) [],
-        /// Enables duty cycle correction for odd divisors
-        DC50 OFFSET(12) NUMBITS(1) [],
-        /// Starts and stops the clock generator cleanly
-        ENABLE OFFSET(11) NUMBITS(1) [],
-        /// Asynchronously kills the clock generator
-        KILL OFFSET(10) NUMBITS(1) [],
-        /// Selects the auxiliary clock source, will glitch when switching
-        AUXSRC OFFSET(5) NUMBITS(4) [
-            CLKSRC_PLL_SYS = 0,
-            CLKSRC_GPIN0 = 1,
-            CLKSRC_GPIN1 = 2,
-            CLKSRC_PLL_USB = 3,
-            ROSC_CLKSRC = 4,
-            XOSC_CLKSRC = 5,
-            CLK_SYS = 6,
-            CLK_USB = 7,
-            CLK_ADC = 8,
-            CLK_RTC = 9,
-            CLK_REF = 0xa
-        ]
-    ],
-    CLK_GPOUTx_DIV [
-        /// Integer component of the divisor, 0 -> divide by 2^16
-        INT OFFSET(8) NUMBITS(24) [],
-        /// Fractional component of the divisor
-        FRAC OFFSET(0) NUMBITS(8) []
-    ],
-    CLK_GPOUTx_SELECTED [
-        VALUE OFFSET (0) NUMBITS (32) []
-    ],
-    CLK_REF_CTRL [
-        /// Selects the auxiliary clock source, will glitch when switching
-        AUXSRC OFFSET(5) NUMBITS(2) [
-
-            CLKSRC_PLL_USB = 0x0,
-            CLKSRC_GPIN0 = 0x1,
-            CLKSRC_GPIN1 = 0x2
-        ],
-        /// Selects the clock source glitchlessly, can be changed on-the-fly
-        SRC OFFSET(0) NUMBITS(2) [
-
-            ROSC_CLKSRC_PH = 0x0,
-            CLKSRC_CLK_REF_AUX = 0x1,
-            XOSC_CLKSRC = 0x2
-        ]
-    ],
-    CLK_REF_DIV [
-        /// Integer component of the divisor, 0 -> divide by 2^16
-        INT OFFSET(8) NUMBITS(2) []
-    ],
-    CLK_REF_SELECTED [
-        VALUE OFFSET (0) NUMBITS (32) []
-    ],
-    CLK_SYS_CTRL [
-        /// Selects the auxiliary clock source, will glitch when switching
-        AUXSRC OFFSET(5) NUMBITS(3) [
-
-            CLKSRC_PLL_SYS = 0x0,
-            CLKSRC_PLL_USB = 0x1,
-            ROSC_CLKSRC = 0x2,
-            XOSC_CLKSRC = 0x3,
-            CLKSRC_GPIN0 = 0x4,
-            CLKSRC_GPIN1 = 0x5
-        ],
-        /// Selects the clock source glitchlessly, can be changed on-the-fly
-        SRC OFFSET(0) NUMBITS(1) [
-            CLKSRC_CLK_SYS_AUX = 1,
-            CLK_REF = 0,
-        ]
-    ],
-    CLK_SYS_DIV [
-        /// Integer component of the divisor, 0 -> divide by 2^16
-        INT OFFSET(8) NUMBITS(24) [],
-        /// Fractional component of the divisor
-        FRAC OFFSET(0) NUMBITS(8) []
-    ],
-    CLK_SYS_SELECTED [
-        VALUE OFFSET (0) NUMBITS (32) []
-    ],
-    CLK_PERI_CTRL [
-        /// Starts and stops the clock generator cleanly
-        ENABLE OFFSET(11) NUMBITS(1) [],
-        /// Asynchronously kills the clock generator
-        KILL OFFSET(10) NUMBITS(1) [],
-        /// Selects the auxiliary clock source, will glitch when switching
-        AUXSRC OFFSET(5) NUMBITS(3) [
-            CLK_SYS = 0,
-            CLKSRC_PLL_SYS = 1,
-            CLKSRC_PLL_USB = 2,
-            ROSC_CLKSRC_PH = 3,
-            XOSC_CLKSRC = 4,
-            CLKSRC_GPIN0 = 5,
-            CLKSRC_GPIN1 = 6
-        ]
-    ],
-    CLK_PERI_SELECTED [
-        VALUE OFFSET (0) NUMBITS (32) []
-    ],
-    CLK_USB_CTRL [
-        /// An edge on this signal shifts the phase of the output by 1 cycle of the input cl
-        /// This can be done at any time
-        NUDGE OFFSET(20) NUMBITS(1) [],
-        /// This delays the enable signal by up to 3 cycles of the input clock
-        /// This must be set before the clock is enabled to have any effect
-        PHASE OFFSET(16) NUMBITS(2) [],
-        /// Starts and stops the clock generator cleanly
-        ENABLE OFFSET(11) NUMBITS(1) [],
-        /// Asynchronously kills the clock generator
-        KILL OFFSET(10) NUMBITS(1) [],
-        /// Selects the auxiliary clock source, will glitch when switching
-        AUXSRC OFFSET(5) NUMBITS(3) [
-
-            CLKSRC_PLL_USB = 0,
-            CLKSRC_PLL_SYS = 1,
-            ROSC_CLKSRC_PH = 2,
-            XOSC_CLKSRC = 3,
-            CLKSRC_GPIN0 = 4,
-            CLKSRC_GPIN1 = 5
-        ]
-    ],
-    CLK_USB_DIV [
-        /// Integer component of the divisor, 0 -> divide by 2^16
-        INT OFFSET(8) NUMBITS(2) []
-    ],
-    CLK_USB_SELECTED [
-        VALUE OFFSET (0) NUMBITS (32) []
-    ],
-    CLK_ADC_CTRL [
-        /// An edge on this signal shifts the phase of the output by 1 cycle of the input cl
-        /// This can be done at any time
-        NUDGE OFFSET(20) NUMBITS(1) [],
-        /// This delays the enable signal by up to 3 cycles of the input clock
-        /// This must be set before the clock is enabled to have any effect
-        PHASE OFFSET(16) NUMBITS(2) [],
-        /// Starts and stops the clock generator cleanly
-        ENABLE OFFSET(11) NUMBITS(1) [],
-        /// Asynchronously kills the clock generator
-        KILL OFFSET(10) NUMBITS(1) [],
-        /// Selects the auxiliary clock source, will glitch when switching
-        AUXSRC OFFSET(5) NUMBITS(3) [
-
-            CLKSRC_PLL_USB = 0,
-            CLKSRC_PLL_SYS = 1,
-            ROSC_CLKSRC_PH = 2,
-            XOSC_CLKSRC = 3,
-            CLKSRC_GPIN0 = 4,
-            CLKSRC_GPIN1 = 5
-        ]
-    ],
-    CLK_ADC_DIV [
-        /// Integer component of the divisor, 0 -> divide by 2^16
-        INT OFFSET(8) NUMBITS(2) []
-    ],
-    CLK_ADC_SELECTED [
-        VALUE OFFSET (0) NUMBITS (32) []
-    ],
-    CLK_RTC_CTRL [
-        /// An edge on this signal shifts the phase of the output by 1 cycle of the input cl
-        /// This can be done at any time
-        NUDGE OFFSET(20) NUMBITS(1) [],
-        /// This delays the enable signal by up to 3 cycles of the input clock
-        /// This must be set before the clock is enabled to have any effect
-        PHASE OFFSET(16) NUMBITS(2) [],
-        /// Starts and stops the clock generator cleanly
-        ENABLE OFFSET(11) NUMBITS(1) [],
-        /// Asynchronously kills the clock generator
-        KILL OFFSET(10) NUMBITS(1) [],
-        /// Selects the auxiliary clock source, will glitch when switching
-        AUXSRC OFFSET(5) NUMBITS(3) [
-
-            CLKSRC_PLL_USB = 0,
-            CLKSRC_PLL_SYS = 1,
-            ROSC_CLKSRC_PH = 2,
-            XOSC_CLKSRC = 3,
-            CLKSRC_GPIN0 = 4,
-            CLKSRC_GPIN1 = 5
-        ]
-    ],
-    CLK_RTC_DIV [
-        /// Integer component of the divisor, 0 -> divide by 2^16
-        INT OFFSET(8) NUMBITS(24) [],
-        /// Fractional component of the divisor
-        FRAC OFFSET(0) NUMBITS(8) []
-    ],
-    CLK_RTC_SELECTED [
-        VALUE OFFSET (0) NUMBITS (32) []
-    ],
-    CLK_SYS_RESUS_CTRL [
-        /// For clearing the resus after the fault that triggered it has been corrected
-        CLEAR OFFSET(16) NUMBITS(1) [],
-        /// Force a resus, for test purposes only
-        FRCE OFFSET(12) NUMBITS(1) [],
-        /// Enable resus
-        ENABLE OFFSET(8) NUMBITS(1) [],
-        /// This is expressed as a number of clk_ref cycles
-        /// and must be >= 2x clk_ref_freq/min_clk_tst_freq
-        TIMEOUT OFFSET(0) NUMBITS(8) []
-    ],
-    CLK_SYS_RESUS_STATUS [
-        /// Clock has been resuscitated, correct the error then send ctrl_clear=1
-        RESUSSED OFFSET(0) NUMBITS(1) []
-    ],
-    FC0_REF_KHZ [
-
-        FC0_REF_KHZ OFFSET(0) NUMBITS(20) []
-    ],
-    FC0_MIN_KHZ [
-
-        FC0_MIN_KHZ OFFSET(0) NUMBITS(25) []
-    ],
-    FC0_MAX_KHZ [
-
-        FC0_MAX_KHZ OFFSET(0) NUMBITS(25) []
-    ],
-    FC0_DELAY [
-
-        FC0_DELAY OFFSET(0) NUMBITS(3) []
-    ],
-    FC0_INTERVAL [
-
-        FC0_INTERVAL OFFSET(0) NUMBITS(4) []
-    ],
-    FC0_SRC [
-
-        FC0_SRC OFFSET(0) NUMBITS(8) [
-
-            NULL = 0
-        ]
-    ],
-    FC0_STATUS [
-        /// Test clock stopped during test
-        DIED OFFSET(28) NUMBITS(1) [],
-        /// Test clock faster than expected, only valid when status_done=1
-        FAST OFFSET(24) NUMBITS(1) [],
-        /// Test clock slower than expected, only valid when status_done=1
-        SLOW OFFSET(20) NUMBITS(1) [],
-        /// Test failed
-        FAIL OFFSET(16) NUMBITS(1) [],
-        /// Waiting for test clock to start
-        WAITING OFFSET(12) NUMBITS(1) [],
-        /// Test running
-        RUNNING OFFSET(8) NUMBITS(1) [],
-        /// Test complete
-        DONE OFFSET(4) NUMBITS(1) [],
-        /// Test passed
-        PASS OFFSET(0) NUMBITS(1) []
-    ],
-    FC0_RESULT [
-
-        KHZ OFFSET(5) NUMBITS(25) [],
-
-        FRAC OFFSET(0) NUMBITS(5) []
-    ],
-    WAKE_EN0 [
-
-        clk_sys_sram3 OFFSET(31) NUMBITS(1) [],
-
-        clk_sys_sram2 OFFSET(30) NUMBITS(1) [],
-
-        clk_sys_sram1 OFFSET(29) NUMBITS(1) [],
-
-        clk_sys_sram0 OFFSET(28) NUMBITS(1) [],
-
-        clk_sys_spi1 OFFSET(27) NUMBITS(1) [],
-
-        clk_peri_spi1 OFFSET(26) NUMBITS(1) [],
-
-        clk_sys_spi0 OFFSET(25) NUMBITS(1) [],
-
-        clk_peri_spi0 OFFSET(24) NUMBITS(1) [],
-
-        clk_sys_sio OFFSET(23) NUMBITS(1) [],
-
-        clk_sys_rtc OFFSET(22) NUMBITS(1) [],
-
-        clk_rtc_rtc OFFSET(21) NUMBITS(1) [],
-
-        clk_sys_rosc OFFSET(20) NUMBITS(1) [],
-
-        clk_sys_rom OFFSET(19) NUMBITS(1) [],
-
-        clk_sys_resets OFFSET(18) NUMBITS(1) [],
-
-        clk_sys_pwm OFFSET(17) NUMBITS(1) [],
-
-        clk_sys_psm OFFSET(16) NUMBITS(1) [],
-
-        clk_sys_pll_usb OFFSET(15) NUMBITS(1) [],
-
-        clk_sys_pll_sys OFFSET(14) NUMBITS(1) [],
-
-        clk_sys_pio1 OFFSET(13) NUMBITS(1) [],
-
-        clk_sys_pio0 OFFSET(12) NUMBITS(1) [],
-
-        clk_sys_pads OFFSET(11) NUMBITS(1) [],
-
-        clk_sys_vreg_and_chip_reset OFFSET(10) NUMBITS(1) [],
-
-        clk_sys_jtag OFFSET(9) NUMBITS(1) [],
-
-        clk_sys_io OFFSET(8) NUMBITS(1) [],
-
-        clk_sys_i2c1 OFFSET(7) NUMBITS(1) [],
-
-        clk_sys_i2c0 OFFSET(6) NUMBITS(1) [],
-
-        clk_sys_dma OFFSET(5) NUMBITS(1) [],
-
-        clk_sys_busfabric OFFSET(4) NUMBITS(1) [],
-
-        clk_sys_busctrl OFFSET(3) NUMBITS(1) [],
-
-        clk_sys_adc OFFSET(2) NUMBITS(1) [],
-
-        clk_adc_adc OFFSET(1) NUMBITS(1) [],
-
-        clk_sys_clocks OFFSET(0) NUMBITS(1) []
-    ],
-    WAKE_EN1 [
-
-        clk_sys_xosc OFFSET(14) NUMBITS(1) [],
-
-        clk_sys_xip OFFSET(13) NUMBITS(1) [],
-
-        clk_sys_watchdog OFFSET(12) NUMBITS(1) [],
-
-        clk_usb_usbctrl OFFSET(11) NUMBITS(1) [],
-
-        clk_sys_usbctrl OFFSET(10) NUMBITS(1) [],
-
-        clk_sys_uart1 OFFSET(9) NUMBITS(1) [],
-
-        clk_peri_uart1 OFFSET(8) NUMBITS(1) [],
-
-        clk_sys_uart0 OFFSET(7) NUMBITS(1) [],
-
-        clk_peri_uart0 OFFSET(6) NUMBITS(1) [],
-
-        clk_sys_timer OFFSET(5) NUMBITS(1) [],
-
-        clk_sys_tbman OFFSET(4) NUMBITS(1) [],
-
-        clk_sys_sysinfo OFFSET(3) NUMBITS(1) [],
-
-        clk_sys_syscfg OFFSET(2) NUMBITS(1) [],
-
-        clk_sys_sram5 OFFSET(1) NUMBITS(1) [],
-
-        clk_sys_sram4 OFFSET(0) NUMBITS(1) []
-    ],
-    SLEEP_EN0 [
-
-        clk_sys_sram3 OFFSET(31) NUMBITS(1) [],
-
-        clk_sys_sram2 OFFSET(30) NUMBITS(1) [],
-
-        clk_sys_sram1 OFFSET(29) NUMBITS(1) [],
-
-        clk_sys_sram0 OFFSET(28) NUMBITS(1) [],
-
-        clk_sys_spi1 OFFSET(27) NUMBITS(1) [],
-
-        clk_peri_spi1 OFFSET(26) NUMBITS(1) [],
-
-        clk_sys_spi0 OFFSET(25) NUMBITS(1) [],
-
-        clk_peri_spi0 OFFSET(24) NUMBITS(1) [],
-
-        clk_sys_sio OFFSET(23) NUMBITS(1) [],
-
-        clk_sys_rtc OFFSET(22) NUMBITS(1) [],
-
-        clk_rtc_rtc OFFSET(21) NUMBITS(1) [],
-
-        clk_sys_rosc OFFSET(20) NUMBITS(1) [],
-
-        clk_sys_rom OFFSET(19) NUMBITS(1) [],
-
-        clk_sys_resets OFFSET(18) NUMBITS(1) [],
-
-        clk_sys_pwm OFFSET(17) NUMBITS(1) [],
-
-        clk_sys_psm OFFSET(16) NUMBITS(1) [],
-
-        clk_sys_pll_usb OFFSET(15) NUMBITS(1) [],
-
-        clk_sys_pll_sys OFFSET(14) NUMBITS(1) [],
-
-        clk_sys_pio1 OFFSET(13) NUMBITS(1) [],
-
-        clk_sys_pio0 OFFSET(12) NUMBITS(1) [],
-
-        clk_sys_pads OFFSET(11) NUMBITS(1) [],
-
-        clk_sys_vreg_and_chip_reset OFFSET(10) NUMBITS(1) [],
-
-        clk_sys_jtag OFFSET(9) NUMBITS(1) [],
-
-        clk_sys_io OFFSET(8) NUMBITS(1) [],
-
-        clk_sys_i2c1 OFFSET(7) NUMBITS(1) [],
-
-        clk_sys_i2c0 OFFSET(6) NUMBITS(1) [],
-
-        clk_sys_dma OFFSET(5) NUMBITS(1) [],
-
-        clk_sys_busfabric OFFSET(4) NUMBITS(1) [],
-
-        clk_sys_busctrl OFFSET(3) NUMBITS(1) [],
-
-        clk_sys_adc OFFSET(2) NUMBITS(1) [],
-
-        clk_adc_adc OFFSET(1) NUMBITS(1) [],
-
-        clk_sys_clocks OFFSET(0) NUMBITS(1) []
-    ],
-    SLEEP_EN1 [
-
-        clk_sys_xosc OFFSET(14) NUMBITS(1) [],
-
-        clk_sys_xip OFFSET(13) NUMBITS(1) [],
-
-        clk_sys_watchdog OFFSET(12) NUMBITS(1) [],
-
-        clk_usb_usbctrl OFFSET(11) NUMBITS(1) [],
-
-        clk_sys_usbctrl OFFSET(10) NUMBITS(1) [],
-
-        clk_sys_uart1 OFFSET(9) NUMBITS(1) [],
-
-        clk_peri_uart1 OFFSET(8) NUMBITS(1) [],
-
-        clk_sys_uart0 OFFSET(7) NUMBITS(1) [],
-
-        clk_peri_uart0 OFFSET(6) NUMBITS(1) [],
-
-        clk_sys_timer OFFSET(5) NUMBITS(1) [],
-
-        clk_sys_tbman OFFSET(4) NUMBITS(1) [],
-
-        clk_sys_sysinfo OFFSET(3) NUMBITS(1) [],
-
-        clk_sys_syscfg OFFSET(2) NUMBITS(1) [],
-
-        clk_sys_sram5 OFFSET(1) NUMBITS(1) [],
-
-        clk_sys_sram4 OFFSET(0) NUMBITS(1) []
-    ],
-    ENABLED0 [
-
-        clk_sys_sram3 OFFSET(31) NUMBITS(1) [],
-
-        clk_sys_sram2 OFFSET(30) NUMBITS(1) [],
-
-        clk_sys_sram1 OFFSET(29) NUMBITS(1) [],
-
-        clk_sys_sram0 OFFSET(28) NUMBITS(1) [],
-
-        clk_sys_spi1 OFFSET(27) NUMBITS(1) [],
-
-        clk_peri_spi1 OFFSET(26) NUMBITS(1) [],
-
-        clk_sys_spi0 OFFSET(25) NUMBITS(1) [],
-
-        clk_peri_spi0 OFFSET(24) NUMBITS(1) [],
-
-        clk_sys_sio OFFSET(23) NUMBITS(1) [],
-
-        clk_sys_rtc OFFSET(22) NUMBITS(1) [],
-
-        clk_rtc_rtc OFFSET(21) NUMBITS(1) [],
-
-        clk_sys_rosc OFFSET(20) NUMBITS(1) [],
-
-        clk_sys_rom OFFSET(19) NUMBITS(1) [],
-
-        clk_sys_resets OFFSET(18) NUMBITS(1) [],
-
-        clk_sys_pwm OFFSET(17) NUMBITS(1) [],
-
-        clk_sys_psm OFFSET(16) NUMBITS(1) [],
-
-        clk_sys_pll_usb OFFSET(15) NUMBITS(1) [],
-
-        clk_sys_pll_sys OFFSET(14) NUMBITS(1) [],
-
-        clk_sys_pio1 OFFSET(13) NUMBITS(1) [],
-
-        clk_sys_pio0 OFFSET(12) NUMBITS(1) [],
-
-        clk_sys_pads OFFSET(11) NUMBITS(1) [],
-
-        clk_sys_vreg_and_chip_reset OFFSET(10) NUMBITS(1) [],
-
-        clk_sys_jtag OFFSET(9) NUMBITS(1) [],
-
-        clk_sys_io OFFSET(8) NUMBITS(1) [],
-
-        clk_sys_i2c1 OFFSET(7) NUMBITS(1) [],
-
-        clk_sys_i2c0 OFFSET(6) NUMBITS(1) [],
-
-        clk_sys_dma OFFSET(5) NUMBITS(1) [],
-
-        clk_sys_busfabric OFFSET(4) NUMBITS(1) [],
-
-        clk_sys_busctrl OFFSET(3) NUMBITS(1) [],
-
-        clk_sys_adc OFFSET(2) NUMBITS(1) [],
-
-        clk_adc_adc OFFSET(1) NUMBITS(1) [],
-
-        clk_sys_clocks OFFSET(0) NUMBITS(1) []
-    ],
-    ENABLED1 [
-
-        clk_sys_xosc OFFSET(14) NUMBITS(1) [],
-
-        clk_sys_xip OFFSET(13) NUMBITS(1) [],
-
-        clk_sys_watchdog OFFSET(12) NUMBITS(1) [],
-
-        clk_usb_usbctrl OFFSET(11) NUMBITS(1) [],
-
-        clk_sys_usbctrl OFFSET(10) NUMBITS(1) [],
-
-        clk_sys_uart1 OFFSET(9) NUMBITS(1) [],
-
-        clk_peri_uart1 OFFSET(8) NUMBITS(1) [],
-
-        clk_sys_uart0 OFFSET(7) NUMBITS(1) [],
-
-        clk_peri_uart0 OFFSET(6) NUMBITS(1) [],
-
-        clk_sys_timer OFFSET(5) NUMBITS(1) [],
-
-        clk_sys_tbman OFFSET(4) NUMBITS(1) [],
-
-        clk_sys_sysinfo OFFSET(3) NUMBITS(1) [],
-
-        clk_sys_syscfg OFFSET(2) NUMBITS(1) [],
-
-        clk_sys_sram5 OFFSET(1) NUMBITS(1) [],
-
-        clk_sys_sram4 OFFSET(0) NUMBITS(1) []
-    ],
-    INTR [
-
-        CLK_SYS_RESUS OFFSET(0) NUMBITS(1) []
-    ],
-    INTE [
-
-        CLK_SYS_RESUS OFFSET(0) NUMBITS(1) []
-    ],
-    INTF [
-
-        CLK_SYS_RESUS OFFSET(0) NUMBITS(1) []
-    ],
-    INTS [
-
-        CLK_SYS_RESUS OFFSET(0) NUMBITS(1) []
+CLK_GPOUTx_CTRL [
+    /// clock generator is enabled
+    ENABLED OFFSET(28) NUMBITS(1) [],
+    /// An edge on this signal shifts the phase of the output by 1 cycle of the input cl
+/// This can be done at any time
+    NUDGE OFFSET(20) NUMBITS(1) [],
+    /// This delays the enable signal by up to 3 cycles of the input clock
+/// This must be set before the clock is enabled to have
+    PHASE OFFSET(16) NUMBITS(2) [],
+    /// Enables duty cycle correction for odd divisors, can be changed on-the-fly
+    DC50 OFFSET(12) NUMBITS(1) [],
+    /// Starts and stops the clock generator cleanly
+    ENABLE OFFSET(11) NUMBITS(1) [],
+    /// Asynchronously kills the clock generator, enable must be set low before deassert
+    KILL OFFSET(10) NUMBITS(1) [],
+    /// Selects the auxiliary clock source, will glitch when switching
+    AUXSRC OFFSET(5) NUMBITS(4) [
+
+        Clksrc_pll_sys = 0
     ]
-];
+],
+CLK_GPOUTx_DIV [
+    /// Integer part of clock divisor, 0 -> max+1, can be changed on-the-fly
+    INT OFFSET(16) NUMBITS(16) [],
+    /// Fractional component of the divisor, can be changed on-the-fly
+    FRAC OFFSET(0) NUMBITS(16) []
+],
+CLK_GPOUTx_SELECTED [
+    /// This slice does not have a glitchless mux (only the AUX_SRC field is present, no
+    CLK_GPOUT0_SELECTED OFFSET(0) NUMBITS(1) []
+],
+CLK_REF_CTRL [
+    /// Selects the auxiliary clock source, will glitch when switching
+    AUXSRC OFFSET(5) NUMBITS(2) [
 
-register_bitfields![u32,
-    CS [
-        /// PLL is locked
-        LOCK OFFSET(31) NUMBITS(1) [],
-        /// Passes the reference clock to the output instead of the divided VCO. The VCO con
-        BYPASS OFFSET(8) NUMBITS(1) [],
-        /// Divides the PLL input reference clock.
-        /// Behaviour is undefined for div=0.
-        /// PLL output will be unpredictable during refdiv changes, wait for
-        REFDIV OFFSET(0) NUMBITS(6) []
+        Clksrc_pll_usb = 0
     ],
-    PWR [
-        /// PLL VCO powerdown
-        /// To save power set high when PLL output not required or bypass=1.
-        VCOPD OFFSET(5) NUMBITS(1) [],
-        /// PLL post divider powerdown
-        /// To save power set high when PLL output not required or bypass=1.
-        POSTDIVPD OFFSET(3) NUMBITS(1) [],
-        /// PLL DSM powerdown
-        /// Nothing is achieved by setting this low.
-        DSMPD OFFSET(2) NUMBITS(1) [],
-        /// PLL powerdown
-        /// To save power set high when PLL output not required.
-        PD OFFSET(0) NUMBITS(1) []
-    ],
-    FBDIV_INT [
-        /// see ctrl reg description for constraints
-        FBDIV_INT OFFSET(0) NUMBITS(12) []
-    ],
-    PRIM [
-        /// divide by 1-7
-        POSTDIV1 OFFSET(16) NUMBITS(3) [],
-        /// divide by 1-7
-        POSTDIV2 OFFSET(12) NUMBITS(3) []
+    /// Selects the clock source glitchlessly, can be changed on-the-fly
+    SRC OFFSET(0) NUMBITS(2) [
+
+        Rosc_clksrc_ph = 0
     ]
+],
+CLK_REF_DIV [
+    /// Integer part of clock divisor, 0 -> max+1, can be changed on-the-fly
+    INT OFFSET(16) NUMBITS(8) []
+],
+CLK_REF_SELECTED [
+    /// The glitchless multiplexer does not switch instantaneously (to avoid glitches),
+    CLK_REF_SELECTED OFFSET(0) NUMBITS(4) []
+],
+CLK_SYS_CTRL [
+    /// Selects the auxiliary clock source, will glitch when switching
+    AUXSRC OFFSET(5) NUMBITS(3) [
+
+        Clksrc_pll_sys = 0
+    ],
+    /// Selects the clock source glitchlessly, can be changed on-the-fly
+    SRC OFFSET(0) NUMBITS(1) [
+
+        Clk_ref = 0
+    ]
+],
+CLK_SYS_DIV [
+    /// Integer part of clock divisor, 0 -> max+1, can be changed on-the-fly
+    INT OFFSET(16) NUMBITS(16) [],
+    /// Fractional component of the divisor, can be changed on-the-fly
+    FRAC OFFSET(0) NUMBITS(16) []
+],
+CLK_SYS_SELECTED [
+    /// The glitchless multiplexer does not switch instantaneously (to avoid glitches),
+    CLK_SYS_SELECTED OFFSET(0) NUMBITS(2) []
+],
+CLK_PERI_CTRL [
+    /// clock generator is enabled
+    ENABLED OFFSET(28) NUMBITS(1) [],
+    /// Starts and stops the clock generator cleanly
+    ENABLE OFFSET(11) NUMBITS(1) [],
+    /// Asynchronously kills the clock generator, enable must be set low before deassert
+    KILL OFFSET(10) NUMBITS(1) [],
+    /// Selects the auxiliary clock source, will glitch when switching
+    AUXSRC OFFSET(5) NUMBITS(3) [
+
+        Clk_sys = 0
+    ]
+],
+CLK_PERI_DIV [
+    /// Integer part of clock divisor, 0 -> max+1, can be changed on-the-fly
+    INT OFFSET(16) NUMBITS(2) []
+],
+CLK_PERI_SELECTED [
+    /// This slice does not have a glitchless mux (only the AUX_SRC field is present, no
+    CLK_PERI_SELECTED OFFSET(0) NUMBITS(1) []
+],
+CLK_HSTX_CTRL [
+    /// clock generator is enabled
+    ENABLED OFFSET(28) NUMBITS(1) [],
+    /// An edge on this signal shifts the phase of the output by 1 cycle of the input cl
+/// This can be done at any time
+    NUDGE OFFSET(20) NUMBITS(1) [],
+    /// This delays the enable signal by up to 3 cycles of the input clock
+/// This must be set before the clock is enabled to have
+    PHASE OFFSET(16) NUMBITS(2) [],
+    /// Starts and stops the clock generator cleanly
+    ENABLE OFFSET(11) NUMBITS(1) [],
+    /// Asynchronously kills the clock generator, enable must be set low before deassert
+    KILL OFFSET(10) NUMBITS(1) [],
+    /// Selects the auxiliary clock source, will glitch when switching
+    AUXSRC OFFSET(5) NUMBITS(3) [
+
+        Clk_sys = 0
+    ]
+],
+CLK_HSTX_DIV [
+    /// Integer part of clock divisor, 0 -> max+1, can be changed on-the-fly
+    INT OFFSET(16) NUMBITS(2) []
+],
+CLK_HSTX_SELECTED [
+    /// This slice does not have a glitchless mux (only the AUX_SRC field is present, no
+    CLK_HSTX_SELECTED OFFSET(0) NUMBITS(1) []
+],
+CLK_USB_CTRL [
+    /// clock generator is enabled
+    ENABLED OFFSET(28) NUMBITS(1) [],
+    /// An edge on this signal shifts the phase of the output by 1 cycle of the input cl
+/// This can be done at any time
+    NUDGE OFFSET(20) NUMBITS(1) [],
+    /// This delays the enable signal by up to 3 cycles of the input clock
+/// This must be set before the clock is enabled to have
+    PHASE OFFSET(16) NUMBITS(2) [],
+    /// Starts and stops the clock generator cleanly
+    ENABLE OFFSET(11) NUMBITS(1) [],
+    /// Asynchronously kills the clock generator, enable must be set low before deassert
+    KILL OFFSET(10) NUMBITS(1) [],
+    /// Selects the auxiliary clock source, will glitch when switching
+    AUXSRC OFFSET(5) NUMBITS(3) [
+
+        Clksrc_pll_usb = 0
+    ]
+],
+CLK_USB_DIV [
+    /// Integer part of clock divisor, 0 -> max+1, can be changed on-the-fly
+    INT OFFSET(16) NUMBITS(4) []
+],
+CLK_USB_SELECTED [
+    /// This slice does not have a glitchless mux (only the AUX_SRC field is present, no
+    CLK_USB_SELECTED OFFSET(0) NUMBITS(1) []
+],
+CLK_ADC_CTRL [
+    /// clock generator is enabled
+    ENABLED OFFSET(28) NUMBITS(1) [],
+    /// An edge on this signal shifts the phase of the output by 1 cycle of the input cl
+/// This can be done at any time
+    NUDGE OFFSET(20) NUMBITS(1) [],
+    /// This delays the enable signal by up to 3 cycles of the input clock
+/// This must be set before the clock is enabled to have
+    PHASE OFFSET(16) NUMBITS(2) [],
+    /// Starts and stops the clock generator cleanly
+    ENABLE OFFSET(11) NUMBITS(1) [],
+    /// Asynchronously kills the clock generator, enable must be set low before deassert
+    KILL OFFSET(10) NUMBITS(1) [],
+    /// Selects the auxiliary clock source, will glitch when switching
+    AUXSRC OFFSET(5) NUMBITS(3) [
+
+        Clksrc_pll_usb = 0
+    ]
+],
+CLK_ADC_DIV [
+    /// Integer part of clock divisor, 0 -> max+1, can be changed on-the-fly
+    INT OFFSET(16) NUMBITS(4) []
+],
+CLK_ADC_SELECTED [
+    /// This slice does not have a glitchless mux (only the AUX_SRC field is present, no
+    CLK_ADC_SELECTED OFFSET(0) NUMBITS(1) []
+],
+DFTCLK_XOSC_CTRL [
+
+    SRC OFFSET(0) NUMBITS(2) [
+
+        NULL = 0
+    ]
+],
+DFTCLK_ROSC_CTRL [
+
+    SRC OFFSET(0) NUMBITS(2) [
+
+        NULL = 0
+    ]
+],
+DFTCLK_LPOSC_CTRL [
+
+    SRC OFFSET(0) NUMBITS(2) [
+
+        NULL = 0
+    ]
+],
+CLK_SYS_RESUS_CTRL [
+    /// For clearing the resus after the fault that triggered it has been corrected
+    CLEAR OFFSET(16) NUMBITS(1) [],
+    /// Force a resus, for test purposes only
+    FRCE OFFSET(12) NUMBITS(1) [],
+    /// Enable resus
+    ENABLE OFFSET(8) NUMBITS(1) [],
+    /// This is expressed as a number of clk_ref cycles
+/// and must be >= 2x clk_ref_freq/min_clk_tst_freq
+    TIMEOUT OFFSET(0) NUMBITS(8) []
+],
+CLK_SYS_RESUS_STATUS [
+    /// Clock has been resuscitated, correct the error then send ctrl_clear=1
+    RESUSSED OFFSET(0) NUMBITS(1) []
+],
+FC0_REF_KHZ [
+
+    FC0_REF_KHZ OFFSET(0) NUMBITS(20) []
+],
+FC0_MIN_KHZ [
+
+    FC0_MIN_KHZ OFFSET(0) NUMBITS(25) []
+],
+FC0_MAX_KHZ [
+
+    FC0_MAX_KHZ OFFSET(0) NUMBITS(25) []
+],
+FC0_DELAY [
+
+    FC0_DELAY OFFSET(0) NUMBITS(3) []
+],
+FC0_INTERVAL [
+
+    FC0_INTERVAL OFFSET(0) NUMBITS(4) []
+],
+FC0_SRC [
+
+    FC0_SRC OFFSET(0) NUMBITS(8) [
+
+        NULL = 0
+    ]
+],
+FC0_STATUS [
+    /// Test clock stopped during test
+    DIED OFFSET(28) NUMBITS(1) [],
+    /// Test clock faster than expected, only valid when status_done=1
+    FAST OFFSET(24) NUMBITS(1) [],
+    /// Test clock slower than expected, only valid when status_done=1
+    SLOW OFFSET(20) NUMBITS(1) [],
+    /// Test failed
+    FAIL OFFSET(16) NUMBITS(1) [],
+    /// Waiting for test clock to start
+    WAITING OFFSET(12) NUMBITS(1) [],
+    /// Test running
+    RUNNING OFFSET(8) NUMBITS(1) [],
+    /// Test complete
+    DONE OFFSET(4) NUMBITS(1) [],
+    /// Test passed
+    PASS OFFSET(0) NUMBITS(1) []
+],
+FC0_RESULT [
+
+    KHZ OFFSET(5) NUMBITS(25) [],
+
+    FRAC OFFSET(0) NUMBITS(5) []
+],
+WAKE_EN0 [
+
+    CLK_SYS_SIO OFFSET(31) NUMBITS(1) [],
+
+    CLK_SYS_SHA256 OFFSET(30) NUMBITS(1) [],
+
+    CLK_SYS_PSM OFFSET(29) NUMBITS(1) [],
+
+    CLK_SYS_ROSC OFFSET(28) NUMBITS(1) [],
+
+    CLK_SYS_ROM OFFSET(27) NUMBITS(1) [],
+
+    CLK_SYS_RESETS OFFSET(26) NUMBITS(1) [],
+
+    CLK_SYS_PWM OFFSET(25) NUMBITS(1) [],
+
+    CLK_SYS_POWMAN OFFSET(24) NUMBITS(1) [],
+
+    CLK_REF_POWMAN OFFSET(23) NUMBITS(1) [],
+
+    CLK_SYS_PLL_USB OFFSET(22) NUMBITS(1) [],
+
+    CLK_SYS_PLL_SYS OFFSET(21) NUMBITS(1) [],
+
+    CLK_SYS_PIO2 OFFSET(20) NUMBITS(1) [],
+
+    CLK_SYS_PIO1 OFFSET(19) NUMBITS(1) [],
+
+    CLK_SYS_PIO0 OFFSET(18) NUMBITS(1) [],
+
+    CLK_SYS_PADS OFFSET(17) NUMBITS(1) [],
+
+    CLK_SYS_OTP OFFSET(16) NUMBITS(1) [],
+
+    CLK_REF_OTP OFFSET(15) NUMBITS(1) [],
+
+    CLK_SYS_JTAG OFFSET(14) NUMBITS(1) [],
+
+    CLK_SYS_IO OFFSET(13) NUMBITS(1) [],
+
+    CLK_SYS_I2C1 OFFSET(12) NUMBITS(1) [],
+
+    CLK_SYS_I2C0 OFFSET(11) NUMBITS(1) [],
+
+    CLK_SYS_HSTX OFFSET(10) NUMBITS(1) [],
+
+    CLK_HSTX OFFSET(9) NUMBITS(1) [],
+
+    CLK_SYS_GLITCH_DETECTOR OFFSET(8) NUMBITS(1) [],
+
+    CLK_SYS_DMA OFFSET(7) NUMBITS(1) [],
+
+    CLK_SYS_BUSFABRIC OFFSET(6) NUMBITS(1) [],
+
+    CLK_SYS_BUSCTRL OFFSET(5) NUMBITS(1) [],
+
+    CLK_SYS_BOOTRAM OFFSET(4) NUMBITS(1) [],
+
+    CLK_SYS_ADC OFFSET(3) NUMBITS(1) [],
+
+    CLK_ADC OFFSET(2) NUMBITS(1) [],
+
+    CLK_SYS_ACCESSCTRL OFFSET(1) NUMBITS(1) [],
+
+    CLK_SYS_CLOCKS OFFSET(0) NUMBITS(1) []
+],
+WAKE_EN1 [
+
+    CLK_SYS_XOSC OFFSET(30) NUMBITS(1) [],
+
+    CLK_SYS_XIP OFFSET(29) NUMBITS(1) [],
+
+    CLK_SYS_WATCHDOG OFFSET(28) NUMBITS(1) [],
+
+    CLK_USB OFFSET(27) NUMBITS(1) [],
+
+    CLK_SYS_USBCTRL OFFSET(26) NUMBITS(1) [],
+
+    CLK_SYS_UART1 OFFSET(25) NUMBITS(1) [],
+
+    CLK_PERI_UART1 OFFSET(24) NUMBITS(1) [],
+
+    CLK_SYS_UART0 OFFSET(23) NUMBITS(1) [],
+
+    CLK_PERI_UART0 OFFSET(22) NUMBITS(1) [],
+
+    CLK_SYS_TRNG OFFSET(21) NUMBITS(1) [],
+
+    CLK_SYS_TIMER1 OFFSET(20) NUMBITS(1) [],
+
+    CLK_SYS_TIMER0 OFFSET(19) NUMBITS(1) [],
+
+    CLK_SYS_TICKS OFFSET(18) NUMBITS(1) [],
+
+    CLK_REF_TICKS OFFSET(17) NUMBITS(1) [],
+
+    CLK_SYS_TBMAN OFFSET(16) NUMBITS(1) [],
+
+    CLK_SYS_SYSINFO OFFSET(15) NUMBITS(1) [],
+
+    CLK_SYS_SYSCFG OFFSET(14) NUMBITS(1) [],
+
+    CLK_SYS_SRAM9 OFFSET(13) NUMBITS(1) [],
+
+    CLK_SYS_SRAM8 OFFSET(12) NUMBITS(1) [],
+
+    CLK_SYS_SRAM7 OFFSET(11) NUMBITS(1) [],
+
+    CLK_SYS_SRAM6 OFFSET(10) NUMBITS(1) [],
+
+    CLK_SYS_SRAM5 OFFSET(9) NUMBITS(1) [],
+
+    CLK_SYS_SRAM4 OFFSET(8) NUMBITS(1) [],
+
+    CLK_SYS_SRAM3 OFFSET(7) NUMBITS(1) [],
+
+    CLK_SYS_SRAM2 OFFSET(6) NUMBITS(1) [],
+
+    CLK_SYS_SRAM1 OFFSET(5) NUMBITS(1) [],
+
+    CLK_SYS_SRAM0 OFFSET(4) NUMBITS(1) [],
+
+    CLK_SYS_SPI1 OFFSET(3) NUMBITS(1) [],
+
+    CLK_PERI_SPI1 OFFSET(2) NUMBITS(1) [],
+
+    CLK_SYS_SPI0 OFFSET(1) NUMBITS(1) [],
+
+    CLK_PERI_SPI0 OFFSET(0) NUMBITS(1) []
+],
+SLEEP_EN0 [
+
+    CLK_SYS_SIO OFFSET(31) NUMBITS(1) [],
+
+    CLK_SYS_SHA256 OFFSET(30) NUMBITS(1) [],
+
+    CLK_SYS_PSM OFFSET(29) NUMBITS(1) [],
+
+    CLK_SYS_ROSC OFFSET(28) NUMBITS(1) [],
+
+    CLK_SYS_ROM OFFSET(27) NUMBITS(1) [],
+
+    CLK_SYS_RESETS OFFSET(26) NUMBITS(1) [],
+
+    CLK_SYS_PWM OFFSET(25) NUMBITS(1) [],
+
+    CLK_SYS_POWMAN OFFSET(24) NUMBITS(1) [],
+
+    CLK_REF_POWMAN OFFSET(23) NUMBITS(1) [],
+
+    CLK_SYS_PLL_USB OFFSET(22) NUMBITS(1) [],
+
+    CLK_SYS_PLL_SYS OFFSET(21) NUMBITS(1) [],
+
+    CLK_SYS_PIO2 OFFSET(20) NUMBITS(1) [],
+
+    CLK_SYS_PIO1 OFFSET(19) NUMBITS(1) [],
+
+    CLK_SYS_PIO0 OFFSET(18) NUMBITS(1) [],
+
+    CLK_SYS_PADS OFFSET(17) NUMBITS(1) [],
+
+    CLK_SYS_OTP OFFSET(16) NUMBITS(1) [],
+
+    CLK_REF_OTP OFFSET(15) NUMBITS(1) [],
+
+    CLK_SYS_JTAG OFFSET(14) NUMBITS(1) [],
+
+    CLK_SYS_IO OFFSET(13) NUMBITS(1) [],
+
+    CLK_SYS_I2C1 OFFSET(12) NUMBITS(1) [],
+
+    CLK_SYS_I2C0 OFFSET(11) NUMBITS(1) [],
+
+    CLK_SYS_HSTX OFFSET(10) NUMBITS(1) [],
+
+    CLK_HSTX OFFSET(9) NUMBITS(1) [],
+
+    CLK_SYS_GLITCH_DETECTOR OFFSET(8) NUMBITS(1) [],
+
+    CLK_SYS_DMA OFFSET(7) NUMBITS(1) [],
+
+    CLK_SYS_BUSFABRIC OFFSET(6) NUMBITS(1) [],
+
+    CLK_SYS_BUSCTRL OFFSET(5) NUMBITS(1) [],
+
+    CLK_SYS_BOOTRAM OFFSET(4) NUMBITS(1) [],
+
+    CLK_SYS_ADC OFFSET(3) NUMBITS(1) [],
+
+    CLK_ADC OFFSET(2) NUMBITS(1) [],
+
+    CLK_SYS_ACCESSCTRL OFFSET(1) NUMBITS(1) [],
+
+    CLK_SYS_CLOCKS OFFSET(0) NUMBITS(1) []
+],
+SLEEP_EN1 [
+
+    CLK_SYS_XOSC OFFSET(30) NUMBITS(1) [],
+
+    CLK_SYS_XIP OFFSET(29) NUMBITS(1) [],
+
+    CLK_SYS_WATCHDOG OFFSET(28) NUMBITS(1) [],
+
+    CLK_USB OFFSET(27) NUMBITS(1) [],
+
+    CLK_SYS_USBCTRL OFFSET(26) NUMBITS(1) [],
+
+    CLK_SYS_UART1 OFFSET(25) NUMBITS(1) [],
+
+    CLK_PERI_UART1 OFFSET(24) NUMBITS(1) [],
+
+    CLK_SYS_UART0 OFFSET(23) NUMBITS(1) [],
+
+    CLK_PERI_UART0 OFFSET(22) NUMBITS(1) [],
+
+    CLK_SYS_TRNG OFFSET(21) NUMBITS(1) [],
+
+    CLK_SYS_TIMER1 OFFSET(20) NUMBITS(1) [],
+
+    CLK_SYS_TIMER0 OFFSET(19) NUMBITS(1) [],
+
+    CLK_SYS_TICKS OFFSET(18) NUMBITS(1) [],
+
+    CLK_REF_TICKS OFFSET(17) NUMBITS(1) [],
+
+    CLK_SYS_TBMAN OFFSET(16) NUMBITS(1) [],
+
+    CLK_SYS_SYSINFO OFFSET(15) NUMBITS(1) [],
+
+    CLK_SYS_SYSCFG OFFSET(14) NUMBITS(1) [],
+
+    CLK_SYS_SRAM9 OFFSET(13) NUMBITS(1) [],
+
+    CLK_SYS_SRAM8 OFFSET(12) NUMBITS(1) [],
+
+    CLK_SYS_SRAM7 OFFSET(11) NUMBITS(1) [],
+
+    CLK_SYS_SRAM6 OFFSET(10) NUMBITS(1) [],
+
+    CLK_SYS_SRAM5 OFFSET(9) NUMBITS(1) [],
+
+    CLK_SYS_SRAM4 OFFSET(8) NUMBITS(1) [],
+
+    CLK_SYS_SRAM3 OFFSET(7) NUMBITS(1) [],
+
+    CLK_SYS_SRAM2 OFFSET(6) NUMBITS(1) [],
+
+    CLK_SYS_SRAM1 OFFSET(5) NUMBITS(1) [],
+
+    CLK_SYS_SRAM0 OFFSET(4) NUMBITS(1) [],
+
+    CLK_SYS_SPI1 OFFSET(3) NUMBITS(1) [],
+
+    CLK_PERI_SPI1 OFFSET(2) NUMBITS(1) [],
+
+    CLK_SYS_SPI0 OFFSET(1) NUMBITS(1) [],
+
+    CLK_PERI_SPI0 OFFSET(0) NUMBITS(1) []
+],
+ENABLED0 [
+
+    CLK_SYS_SIO OFFSET(31) NUMBITS(1) [],
+
+    CLK_SYS_SHA256 OFFSET(30) NUMBITS(1) [],
+
+    CLK_SYS_PSM OFFSET(29) NUMBITS(1) [],
+
+    CLK_SYS_ROSC OFFSET(28) NUMBITS(1) [],
+
+    CLK_SYS_ROM OFFSET(27) NUMBITS(1) [],
+
+    CLK_SYS_RESETS OFFSET(26) NUMBITS(1) [],
+
+    CLK_SYS_PWM OFFSET(25) NUMBITS(1) [],
+
+    CLK_SYS_POWMAN OFFSET(24) NUMBITS(1) [],
+
+    CLK_REF_POWMAN OFFSET(23) NUMBITS(1) [],
+
+    CLK_SYS_PLL_USB OFFSET(22) NUMBITS(1) [],
+
+    CLK_SYS_PLL_SYS OFFSET(21) NUMBITS(1) [],
+
+    CLK_SYS_PIO2 OFFSET(20) NUMBITS(1) [],
+
+    CLK_SYS_PIO1 OFFSET(19) NUMBITS(1) [],
+
+    CLK_SYS_PIO0 OFFSET(18) NUMBITS(1) [],
+
+    CLK_SYS_PADS OFFSET(17) NUMBITS(1) [],
+
+    CLK_SYS_OTP OFFSET(16) NUMBITS(1) [],
+
+    CLK_REF_OTP OFFSET(15) NUMBITS(1) [],
+
+    CLK_SYS_JTAG OFFSET(14) NUMBITS(1) [],
+
+    CLK_SYS_IO OFFSET(13) NUMBITS(1) [],
+
+    CLK_SYS_I2C1 OFFSET(12) NUMBITS(1) [],
+
+    CLK_SYS_I2C0 OFFSET(11) NUMBITS(1) [],
+
+    CLK_SYS_HSTX OFFSET(10) NUMBITS(1) [],
+
+    CLK_HSTX OFFSET(9) NUMBITS(1) [],
+
+    CLK_SYS_GLITCH_DETECTOR OFFSET(8) NUMBITS(1) [],
+
+    CLK_SYS_DMA OFFSET(7) NUMBITS(1) [],
+
+    CLK_SYS_BUSFABRIC OFFSET(6) NUMBITS(1) [],
+
+    CLK_SYS_BUSCTRL OFFSET(5) NUMBITS(1) [],
+
+    CLK_SYS_BOOTRAM OFFSET(4) NUMBITS(1) [],
+
+    CLK_SYS_ADC OFFSET(3) NUMBITS(1) [],
+
+    CLK_ADC OFFSET(2) NUMBITS(1) [],
+
+    CLK_SYS_ACCESSCTRL OFFSET(1) NUMBITS(1) [],
+
+    CLK_SYS_CLOCKS OFFSET(0) NUMBITS(1) []
+],
+ENABLED1 [
+
+    CLK_SYS_XOSC OFFSET(30) NUMBITS(1) [],
+
+    CLK_SYS_XIP OFFSET(29) NUMBITS(1) [],
+
+    CLK_SYS_WATCHDOG OFFSET(28) NUMBITS(1) [],
+
+    CLK_USB OFFSET(27) NUMBITS(1) [],
+
+    CLK_SYS_USBCTRL OFFSET(26) NUMBITS(1) [],
+
+    CLK_SYS_UART1 OFFSET(25) NUMBITS(1) [],
+
+    CLK_PERI_UART1 OFFSET(24) NUMBITS(1) [],
+
+    CLK_SYS_UART0 OFFSET(23) NUMBITS(1) [],
+
+    CLK_PERI_UART0 OFFSET(22) NUMBITS(1) [],
+
+    CLK_SYS_TRNG OFFSET(21) NUMBITS(1) [],
+
+    CLK_SYS_TIMER1 OFFSET(20) NUMBITS(1) [],
+
+    CLK_SYS_TIMER0 OFFSET(19) NUMBITS(1) [],
+
+    CLK_SYS_TICKS OFFSET(18) NUMBITS(1) [],
+
+    CLK_REF_TICKS OFFSET(17) NUMBITS(1) [],
+
+    CLK_SYS_TBMAN OFFSET(16) NUMBITS(1) [],
+
+    CLK_SYS_SYSINFO OFFSET(15) NUMBITS(1) [],
+
+    CLK_SYS_SYSCFG OFFSET(14) NUMBITS(1) [],
+
+    CLK_SYS_SRAM9 OFFSET(13) NUMBITS(1) [],
+
+    CLK_SYS_SRAM8 OFFSET(12) NUMBITS(1) [],
+
+    CLK_SYS_SRAM7 OFFSET(11) NUMBITS(1) [],
+
+    CLK_SYS_SRAM6 OFFSET(10) NUMBITS(1) [],
+
+    CLK_SYS_SRAM5 OFFSET(9) NUMBITS(1) [],
+
+    CLK_SYS_SRAM4 OFFSET(8) NUMBITS(1) [],
+
+    CLK_SYS_SRAM3 OFFSET(7) NUMBITS(1) [],
+
+    CLK_SYS_SRAM2 OFFSET(6) NUMBITS(1) [],
+
+    CLK_SYS_SRAM1 OFFSET(5) NUMBITS(1) [],
+
+    CLK_SYS_SRAM0 OFFSET(4) NUMBITS(1) [],
+
+    CLK_SYS_SPI1 OFFSET(3) NUMBITS(1) [],
+
+    CLK_PERI_SPI1 OFFSET(2) NUMBITS(1) [],
+
+    CLK_SYS_SPI0 OFFSET(1) NUMBITS(1) [],
+
+    CLK_PERI_SPI0 OFFSET(0) NUMBITS(1) []
+],
+INTR [
+
+    CLK_SYS_RESUS OFFSET(0) NUMBITS(1) []
+],
+INTE [
+
+    CLK_SYS_RESUS OFFSET(0) NUMBITS(1) []
+],
+INTF [
+
+    CLK_SYS_RESUS OFFSET(0) NUMBITS(1) []
+],
+INTS [
+
+    CLK_SYS_RESUS OFFSET(0) NUMBITS(1) []
+],
+CS [
+    /// PLL is locked
+    LOCK OFFSET(31) NUMBITS(1) [],
+    /// PLL is not locked
+/// Ideally this is cleared when PLL lock is seen and th
+    LOCK_N OFFSET(30) NUMBITS(1) [],
+    /// Passes the reference clock to the output instead of the divided VCO. The VCO con
+    BYPASS OFFSET(8) NUMBITS(1) [],
+    /// Divides the PLL input reference clock.
+/// Behaviour is undefined for div=0.
+/// PLL output will be unpredictable during refdiv chang
+    REFDIV OFFSET(0) NUMBITS(6) []
+],
+PWR [
+    /// PLL VCO powerdown
+/// To save power set high when PLL output not required
+    VCOPD OFFSET(5) NUMBITS(1) [],
+    /// PLL post divider powerdown
+/// To save power set high when PLL output not required
+    POSTDIVPD OFFSET(3) NUMBITS(1) [],
+    /// PLL DSM powerdown
+/// Nothing is achieved by setting this low.
+    DSMPD OFFSET(2) NUMBITS(1) [],
+    /// PLL powerdown
+/// To save power set high when PLL output not required.
+    PD OFFSET(0) NUMBITS(1) []
+],
+FBDIV_INT [
+    /// see ctrl reg description for constraints
+    FBDIV_INT OFFSET(0) NUMBITS(12) []
+],
+PRIM [
+    /// divide by 1-7
+    POSTDIV1 OFFSET(16) NUMBITS(3) [],
+    /// divide by 1-7
+    POSTDIV2 OFFSET(12) NUMBITS(3) []
+],
 ];
-
-const PLL_SYS_BASE: StaticRef<PllRegisters> =
-    unsafe { StaticRef::new(0x40028000 as *const PllRegisters) };
-
-const PLL_USB_BASE: StaticRef<PllRegisters> =
-    unsafe { StaticRef::new(0x4002C000 as *const PllRegisters) };
-
-const CLOCKS_BASE: StaticRef<ClocksRegisters> =
-    unsafe { StaticRef::new(0x40008000 as *const ClocksRegisters) };
-
-const NUM_CLOCKS: usize = 10;
-
-pub struct Clocks {
-    registers: StaticRef<ClocksRegisters>,
-    pll_registers: &'static [StaticRef<PllRegisters>],
-    frequencies: [Cell<u32>; NUM_CLOCKS],
-}
-
-pub enum PllClock {
-    Sys = 0,
-    Usb = 1,
-}
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[repr(usize)]
@@ -762,9 +850,21 @@ pub enum Clock {
     Reference = 4,
     System = 5,
     Peripheral = 6,
-    Usb = 7,
-    Adc = 8,
-    Rtc = 9,
+    Hstx = 7,
+    Usb = 8,
+    Adc = 9,
+}
+
+const CLOCKS_BASE: StaticRef<ClocksRegisters> =
+    unsafe { StaticRef::new(0x40010000 as *const ClocksRegisters) };
+const PLL_SYS_BASE: StaticRef<PllRegisters> =
+    unsafe { StaticRef::new(0x40050000 as *const PllRegisters) };
+const PLL_USB_BASE: StaticRef<PllRegisters> =
+    unsafe { StaticRef::new(0x40058000 as *const PllRegisters) };
+
+pub enum PllClock {
+    Sys = 0,
+    Usb = 1,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -853,7 +953,7 @@ pub enum AdcAuxiliaryClockSource {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[repr(u8)]
-pub enum RtcAuxiliaryClockSource {
+pub enum HstxAuxiliaryClockSource {
     PllSys = 0,
     PllUsb = 1,
     Rsoc = 2,
@@ -881,7 +981,15 @@ pub enum ClockAuxiliarySource {
     Peripheral(PeripheralAuxiliaryClockSource),
     Usb(UsbAuxiliaryClockSource),
     Adc(AdcAuxiliaryClockSource),
-    Rtc(RtcAuxiliaryClockSource),
+    Hstx(HstxAuxiliaryClockSource),
+}
+
+const NUM_CLOCKS: usize = 10;
+
+pub struct Clocks {
+    registers: StaticRef<ClocksRegisters>,
+    pll_registers: &'static [StaticRef<PllRegisters>],
+    frequencies: [Cell<u32>; NUM_CLOCKS],
 }
 
 impl Clocks {
@@ -919,11 +1027,11 @@ impl Clocks {
     pub fn disable_sys_aux(&self) {
         self.registers
             .clk_sys_ctrl
-            .modify(CLK_SYS_CTRL::SRC::CLK_REF);
+            .modify(CLK_SYS_CTRL::SRC::Clk_ref);
         while self
             .registers
             .clk_sys_selected
-            .read(CLK_SYS_SELECTED::VALUE)
+            .read(CLK_SYS_SELECTED::CLK_SYS_SELECTED)
             != 0x1
         {}
     }
@@ -931,11 +1039,11 @@ impl Clocks {
     pub fn disable_ref_aux(&self) {
         self.registers
             .clk_ref_ctrl
-            .modify(CLK_REF_CTRL::SRC::ROSC_CLKSRC_PH);
+            .modify(CLK_REF_CTRL::SRC::Rosc_clksrc_ph);
         while self
             .registers
             .clk_ref_selected
-            .read(CLK_REF_SELECTED::VALUE)
+            .read(CLK_REF_SELECTED::CLK_REF_SELECTED)
             != 0x1
         {}
     }
@@ -1031,7 +1139,7 @@ impl Clocks {
             Clock::Reference => self.registers.clk_ref_div.set(div),
             Clock::Usb => self.registers.clk_usb_div.set(div),
             Clock::Adc => self.registers.clk_adc_div.set(div),
-            Clock::Rtc => self.registers.clk_rtc_div.set(div),
+            Clock::Hstx => self.registers.clk_hstx_div.set(div),
             // Clock::Reference
             _ => panic!("failed to set div"),
         }
@@ -1148,11 +1256,11 @@ impl Clocks {
         if source == SystemClockSource::Auxiliary {
             self.registers
                 .clk_sys_ctrl
-                .modify(CLK_SYS_CTRL::SRC::CLK_REF);
+                .modify(CLK_SYS_CTRL::SRC::Clk_ref);
             while self
                 .registers
                 .clk_sys_selected
-                .read(CLK_SYS_SELECTED::VALUE)
+                .read(CLK_SYS_SELECTED::CLK_SYS_SELECTED)
                 != 0x1
             {}
         }
@@ -1166,7 +1274,7 @@ impl Clocks {
         while self
             .registers
             .clk_sys_selected
-            .read(CLK_SYS_SELECTED::VALUE)
+            .read(CLK_SYS_SELECTED::CLK_SYS_SELECTED)
             & (1 << (source as u32))
             == 0x0
         {}
@@ -1209,11 +1317,11 @@ impl Clocks {
         if source == ReferenceClockSource::Auxiliary {
             self.registers
                 .clk_ref_ctrl
-                .modify(CLK_REF_CTRL::SRC::ROSC_CLKSRC_PH);
+                .modify(CLK_REF_CTRL::SRC::Rosc_clksrc_ph);
             while self
                 .registers
                 .clk_ref_selected
-                .read(CLK_REF_SELECTED::VALUE)
+                .read(CLK_REF_SELECTED::CLK_REF_SELECTED)
                 != 0x1
             {}
         }
@@ -1227,7 +1335,7 @@ impl Clocks {
         while self
             .registers
             .clk_ref_selected
-            .read(CLK_REF_SELECTED::VALUE)
+            .read(CLK_REF_SELECTED::CLK_REF_SELECTED)
             & (1 << (source as u32))
             == 0x0
         {}
@@ -1313,6 +1421,53 @@ impl Clocks {
         self.set_frequency(Clock::Usb, freq);
     }
 
+    pub fn configure_hstx(
+        &self,
+        auxiliary_source: HstxAuxiliaryClockSource,
+        source_freq: u32,
+        freq: u32,
+    ) {
+        if freq > source_freq {
+            panic!(
+                "freq is greater than source freq ({} > {})",
+                freq, source_freq
+            );
+        }
+        let div = self.get_divider(source_freq, freq);
+
+        // pico-sdk:
+        // If increasing divisor, set divisor before source. Otherwise set source
+        // before divisor. This avoids a momentary overspeed when e.g. switching
+        // to a faster source and increasing divisor to compensate.
+        if div > self.registers.clk_hstx_div.get() {
+            self.set_divider(Clock::Hstx, div);
+        }
+
+        self.registers
+            .clk_hstx_ctrl
+            .modify(CLK_HSTX_CTRL::ENABLE::CLEAR);
+        // pico-sdk:
+        // Delay for 3 cycles of the target clock, for ENABLE propagation.
+        // Note XOSC_COUNT is not helpful here because XOSC is not
+        // necessarily running, nor is timer... so, 3 cycles per loop:
+        self.loop_3_cycles(Clock::Hstx);
+
+        self.registers
+            .clk_hstx_ctrl
+            .modify(CLK_HSTX_CTRL::AUXSRC.val(auxiliary_source as u32));
+
+        self.registers
+            .clk_hstx_ctrl
+            .modify(CLK_HSTX_CTRL::ENABLE::SET);
+
+        // pico-sdk:
+        // Now that the source is configured, we can trust that the user-supplied
+        // divisor is a safe value.
+        self.set_divider(Clock::Hstx, div);
+
+        self.set_frequency(Clock::Hstx, freq);
+    }
+
     pub fn configure_adc(
         &self,
         auxiliary_source: AdcAuxiliaryClockSource,
@@ -1358,52 +1513,5 @@ impl Clocks {
         self.set_divider(Clock::Adc, div);
 
         self.set_frequency(Clock::Adc, freq);
-    }
-
-    pub fn configure_rtc(
-        &self,
-        auxiliary_source: RtcAuxiliaryClockSource,
-        source_freq: u32,
-        freq: u32,
-    ) {
-        if freq > source_freq {
-            panic!(
-                "freq is greater than source freq ({} > {})",
-                freq, source_freq
-            );
-        }
-        let div = self.get_divider(source_freq, freq);
-
-        // pico-sdk:
-        // If increasing divisor, set divisor before source. Otherwise set source
-        // before divisor. This avoids a momentary overspeed when e.g. switching
-        // to a faster source and increasing divisor to compensate.
-        if div > self.registers.clk_rtc_div.get() {
-            self.set_divider(Clock::Rtc, div);
-        }
-
-        self.registers
-            .clk_rtc_ctrl
-            .modify(CLK_RTC_CTRL::ENABLE::CLEAR);
-        // pico-sdk:
-        // Delay for 3 cycles of the target clock, for ENABLE propagation.
-        // Note XOSC_COUNT is not helpful here because XOSC is not
-        // necessarily running, nor is timer... so, 3 cycles per loop:
-        self.loop_3_cycles(Clock::Rtc);
-
-        self.registers
-            .clk_rtc_ctrl
-            .modify(CLK_RTC_CTRL::AUXSRC.val(auxiliary_source as u32));
-
-        self.registers
-            .clk_rtc_ctrl
-            .modify(CLK_RTC_CTRL::ENABLE::SET);
-
-        // pico-sdk:
-        // Now that the source is configured, we can trust that the user-supplied
-        // divisor is a safe value.
-        self.set_divider(Clock::Rtc, div);
-
-        self.set_frequency(Clock::Rtc, freq);
     }
 }

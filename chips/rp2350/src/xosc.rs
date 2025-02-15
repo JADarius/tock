@@ -1,6 +1,6 @@
 // Licensed under the Apache License, Version 2.0 or the MIT License.
 // SPDX-License-Identifier: Apache-2.0 OR MIT
-// Copyright Tock Contributors 2022.
+// Copyright Tock Contributors 2025.
 
 use kernel::utilities::registers::interfaces::{ReadWriteable, Readable};
 use kernel::utilities::registers::{register_bitfields, register_structs, ReadWrite};
@@ -22,12 +22,11 @@ register_structs! {
         (0x008 => dormant: ReadWrite<u32, DORMANT::Register>),
         /// Controls the startup delay
         (0x00C => startup: ReadWrite<u32, STARTUP::Register>),
-        (0x010 => _reserved0),
         /// A down counter running at the xosc frequency which counts to zero and stops.\n
         /// To start the counter write a non-zero value.\n
         /// Can be used for short software pauses when setting up time sensitive
-        (0x01C => count: ReadWrite<u32>),
-        (0x020 => @END),
+        (0x010 => count: ReadWrite<u32>),
+        (0x014 => @END),
     }
 }
 
@@ -42,8 +41,10 @@ register_bitfields![u32,
         ],
         /// Frequency range. This resets to 0xAA0 and cannot be changed.
         FREQ_RANGE OFFSET(0) NUMBITS(12) [
-
-            _1_15MHZ = 0xaa0
+            _1_15MHZ = 0xaa0,
+            _10_30MHZ = 0xaa1,
+            _25_60MHZ = 0xaa2,
+            _40_100MHZ = 0xaa3,
         ]
     ],
     STATUS [
@@ -55,8 +56,10 @@ register_bitfields![u32,
         ENABLED OFFSET(12) NUMBITS(1) [],
         /// The current frequency range setting, always reads 0
         FREQ_RANGE OFFSET(0) NUMBITS(2) [
-
-            _1_15MHZ = 0
+            _1_15MHZ = 0x0,
+            _10_30MHZ = 0x1,
+            _25_60MHZ = 0x2,
+            _40_100MHZ = 0x3,
         ]
     ],
     DORMANT [
@@ -72,13 +75,12 @@ register_bitfields![u32,
         DELAY OFFSET(0) NUMBITS(14) []
     ],
     COUNT [
-
-        COUNT OFFSET(0) NUMBITS(8) []
+        COUNT OFFSET(0) NUMBITS(16) []
     ]
 ];
 
 const XOSC_BASE: StaticRef<XoscRegisters> =
-    unsafe { StaticRef::new(0x40024000 as *const XoscRegisters) };
+    unsafe { StaticRef::new(0x40048000 as *const XoscRegisters) };
 
 pub struct Xosc {
     registers: StaticRef<XoscRegisters>,
@@ -92,8 +94,6 @@ impl Xosc {
     }
 
     pub fn init(&self) {
-        // there is only one frequency range available
-        // RP2040 Manual https://datasheets.raspberrypi.org/rp2040/rp2040-datasheet.pdf section 2.16.7
         self.registers.ctrl.modify(CTRL::FREQ_RANGE::_1_15MHZ);
         let startup_delay = (((12 * 1000000) / 1000) + 128) / 256;
         self.registers

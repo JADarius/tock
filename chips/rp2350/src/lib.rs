@@ -5,8 +5,8 @@
 #![no_std]
 
 // pub mod adc;
-// pub mod chip;
-// pub mod clocks;
+pub mod chip;
+pub mod clocks;
 // mod deferred_calls;
 // pub mod gpio;
 // pub mod i2c;
@@ -14,7 +14,7 @@
 // pub mod pio;
 // pub mod pio_pwm;
 // pub mod pwm;
-// pub mod resets;
+pub mod resets;
 // pub mod rtc;
 // pub mod spi;
 // pub mod sysinfo;
@@ -23,7 +23,7 @@
 // pub mod uart;
 // pub mod usb;
 // pub mod watchdog;
-// pub mod xosc;
+pub mod xosc;
 
 use cortexm33::{initialize_ram_jump_to_main, unhandled_interrupt, CortexM33, CortexMVariant};
 

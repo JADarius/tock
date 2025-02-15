@@ -12,8 +12,15 @@
 #![cfg_attr(not(doc), no_main)]
 #![deny(missing_docs)]
 
+use rp2350::chip::Rp2350DefaultPeripherals;
+use rp2350::clocks::{
+    AdcAuxiliaryClockSource, HstxAuxiliaryClockSource, PeripheralAuxiliaryClockSource, PllClock,
+    ReferenceAuxiliaryClockSource, ReferenceClockSource, SystemAuxiliaryClockSource,
+    SystemClockSource, UsbAuxiliaryClockSource,
+};
+use rp2350::resets::Peripheral;
 #[allow(unused)]
-use rp2350::BASE_VECTORS;
+use rp2350::{xosc, BASE_VECTORS};
 
 mod io;
 
@@ -63,6 +70,75 @@ core::arch::global_asm!(
     bx r2
     "
 );
+
+fn init_clocks(peripherals: &Rp2350DefaultPeripherals) {
+    // // Start tick in watchdog
+    // peripherals.watchdog.start_tick(12);
+    //
+    // Disable the Resus clock
+    peripherals.clocks.disable_resus();
+
+    // Setup the external Oscillator
+    peripherals.xosc.init();
+
+    // disable ref and sys clock aux sources
+    peripherals.clocks.disable_sys_aux();
+    peripherals.clocks.disable_ref_aux();
+
+    peripherals
+        .resets
+        .reset(&[Peripheral::PllSys, Peripheral::PllUsb]);
+    peripherals
+        .resets
+        .unreset(&[Peripheral::PllSys, Peripheral::PllUsb], true);
+
+    // Configure PLLs (from Pico SDK)
+    //                   REF     FBDIV VCO            POSTDIV
+    // PLL SYS: 12 / 1 = 12MHz * 125 = 1500MHZ / 6 / 2 = 125MHz
+    // PLL USB: 12 / 1 = 12MHz * 40  = 480 MHz / 5 / 2 =  48MHz
+
+    // It seems that the external oscillator is clocked at 12 MHz
+
+    peripherals
+        .clocks
+        .pll_init(PllClock::Sys, 12, 1, 1500 * 1000000, 6, 2);
+    peripherals
+        .clocks
+        .pll_init(PllClock::Usb, 12, 1, 480 * 1000000, 5, 2);
+
+    // pico-sdk: // CLK_REF = XOSC (12MHz) / 1 = 12MHz
+    peripherals.clocks.configure_reference(
+        ReferenceClockSource::Xosc,
+        ReferenceAuxiliaryClockSource::PllUsb,
+        12000000,
+        12000000,
+    );
+    // pico-sdk: CLK SYS = PLL SYS (125MHz) / 1 = 125MHz
+    peripherals.clocks.configure_system(
+        SystemClockSource::Auxiliary,
+        SystemAuxiliaryClockSource::PllSys,
+        125000000,
+        125000000,
+    );
+    // pico-sdk: CLK USB = PLL USB (48MHz) / 1 = 48MHz
+    peripherals
+        .clocks
+        .configure_usb(UsbAuxiliaryClockSource::PllSys, 48000000, 48000000);
+    // pico-sdk: CLK ADC = PLL USB (48MHZ) / 1 = 48MHz
+    peripherals
+        .clocks
+        .configure_adc(AdcAuxiliaryClockSource::PllUsb, 48000000, 48000000);
+    // pico-sdk: CLK HSTX = PLL USB (48MHz) / 1024 = 46875Hz
+    peripherals
+        .clocks
+        .configure_hstx(HstxAuxiliaryClockSource::PllSys, 48000000, 46875);
+    // pico-sdk:
+    // CLK PERI = clk_sys. Used as reference clock for Peripherals. No dividers so just select and enable
+    // Normally choose clk_sys or clk_usb
+    peripherals
+        .clocks
+        .configure_peripheral(PeripheralAuxiliaryClockSource::System, 125000000);
+}
 
 /// Main function called after RAM initialized.
 #[no_mangle]
