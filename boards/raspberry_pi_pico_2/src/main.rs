@@ -12,12 +12,15 @@
 #![cfg_attr(not(doc), no_main)]
 #![deny(missing_docs)]
 
-use rp2350::chip::Rp2350DefaultPeripherals;
+use kernel::component::Component;
+use kernel::{static_init, Kernel};
+use rp2350::chip::{Rp2350, Rp2350DefaultPeripherals};
 use rp2350::clocks::{
     AdcAuxiliaryClockSource, HstxAuxiliaryClockSource, PeripheralAuxiliaryClockSource, PllClock,
     ReferenceAuxiliaryClockSource, ReferenceClockSource, SystemAuxiliaryClockSource,
     SystemClockSource, UsbAuxiliaryClockSource,
 };
+use rp2350::gpio2::{GpioFunction, RPGpio, RPGpioPin};
 use rp2350::resets::Peripheral;
 #[allow(unused)]
 use rp2350::{xosc, BASE_VECTORS};
@@ -143,6 +146,48 @@ fn init_clocks(peripherals: &Rp2350DefaultPeripherals) {
 /// Main function called after RAM initialized.
 #[no_mangle]
 pub unsafe fn main() {
+    let peripherals = static_init!(Rp2350DefaultPeripherals, Rp2350DefaultPeripherals::new());
+    peripherals.resolve_dependencies();
+    peripherals.resets.reset_all_except(&[
+        Peripheral::IOQSpi,
+        Peripheral::PadsQSpi,
+        Peripheral::PllUsb,
+        Peripheral::PllSys,
+    ]);
+
+    peripherals.resets.unreset_all_except(
+        &[
+            Peripheral::Adc,
+            Peripheral::Spi0,
+            Peripheral::Spi1,
+            Peripheral::Uart0,
+            Peripheral::Uart1,
+            Peripheral::UsbCtrl,
+        ],
+        true,
+    );
+
+    init_clocks(peripherals);
+
+    let gpio_tx = peripherals.pins.get_pin(RPGpio::GPIO0);
+    let gpio_rx = peripherals.pins.get_pin(RPGpio::GPIO1);
+    gpio_rx.set_function(GpioFunction::UART);
+    gpio_tx.set_function(GpioFunction::UART);
+
+    //// Disable IE for pads 26-29 (the Pico SDK runtime does this, not sure why)
+    //for pin in 26..30 {
+    //    peripherals
+    //        .pins
+    //        .get_pin(RPGpio::from_usize(pin).unwrap())
+    //        .deactivate_pads();
+    //}
+    //
+    //
+    let uart_mux2 = components::console::UartMuxComponent::new(&peripherals.uart0, 115200)
+        .finalize(components::uart_mux_component_static!());
+    peripherals.uart0.send_byte(b'D');
+
+    let _chip = static_init!(Rp2350<Rp2350DefaultPeripherals>, Rp2350::new(peripherals));
     loop {
         cortexm33::support::nop();
     }

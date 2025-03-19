@@ -10,7 +10,7 @@ use kernel::platform::chip::InterruptService;
 
 // use crate::adc;
 use crate::clocks::Clocks;
-// use crate::gpio::{RPGpio, RPPins, SIO};
+use crate::gpio2::{RPGpio, RPPins};
 // use crate::i2c;
 // use crate::interrupts;
 // use crate::pio::Pio;
@@ -20,7 +20,7 @@ use crate::resets::Resets;
 // use crate::spi;
 // use crate::sysinfo;
 // use crate::timer::RPTimer;
-// use crate::uart::Uart;
+use crate::uart::Uart;
 // use crate::usb;
 // use crate::watchdog::Watchdog;
 use crate::xosc::Xosc;
@@ -59,28 +59,28 @@ impl<I: InterruptService> Chip for Rp2350<'_, I> {
     type UserspaceKernelBoundary = cortexm33::syscall::SysCall;
 
     fn service_pending_interrupts(&self) {
-        unsafe {
-            // let mask = match self.sio.get_processor() {
-            //     Processor::Processor0 => self.processor0_interrupt_mask,
-            //     Processor::Processor1 => self.processor1_interrupt_mask,
-            // };
-            loop {
-                // if let Some(interrupt) = cortexm33::nvic::next_pending_with_mask(mask) {
-                //     // ignore SIO_IRQ_PROC1 as it is intended for processor 1
-                //     // not able to unset its pending status
-                //     // probably only processor 1 can unset the pending by reading the fifo
-                //     if !self.interrupt_service.service_interrupt(interrupt) {
-                //         panic!("unhandled interrupt {}", interrupt);
-                //     }
-                //     let n = cortexm33::nvic::Nvic::new(interrupt);
-                //     n.clear_pending();
-                //     n.enable();
-                // } else {
-                //     break;
-                // }
-                break;
-            }
-        }
+        //unsafe {
+        //    // let mask = match self.sio.get_processor() {
+        //    //     Processor::Processor0 => self.processor0_interrupt_mask,
+        //    //     Processor::Processor1 => self.processor1_interrupt_mask,
+        //    // };
+        //    loop {
+        //        // if let Some(interrupt) = cortexm33::nvic::next_pending_with_mask(mask) {
+        //        //     // ignore SIO_IRQ_PROC1 as it is intended for processor 1
+        //        //     // not able to unset its pending status
+        //        //     // probably only processor 1 can unset the pending by reading the fifo
+        //        //     if !self.interrupt_service.service_interrupt(interrupt) {
+        //        //         panic!("unhandled interrupt {}", interrupt);
+        //        //     }
+        //        //     let n = cortexm33::nvic::Nvic::new(interrupt);
+        //        //     n.clear_pending();
+        //        //     n.enable();
+        //        // } else {
+        //        //     break;
+        //        // }
+        //        break;
+        //    }
+        //}
     }
 
     fn has_pending_interrupts(&self) -> bool {
@@ -121,11 +121,11 @@ impl<I: InterruptService> Chip for Rp2350<'_, I> {
     }
 }
 
-pub struct Rp2350DefaultPeripherals {
+pub struct Rp2350DefaultPeripherals<'a> {
     // pub adc: adc::Adc<'a>,
     pub clocks: Clocks,
     // pub i2c0: i2c::I2c<'a, 'a>,
-    // pub pins: RPPins<'a>,
+    pub pins: RPPins<'a>,
     // pub pio0: Pio,
     // pub pio1: Pio,
     // pub pwm: pwm::Pwm<'a>,
@@ -134,21 +134,21 @@ pub struct Rp2350DefaultPeripherals {
     // pub spi0: spi::Spi<'a>,
     // pub sysinfo: sysinfo::SysInfo,
     // pub timer: RPTimer<'a>,
-    // pub uart0: Uart<'a>,
-    // pub uart1: Uart<'a>,
+    pub uart0: Uart<'a>,
+    pub uart1: Uart<'a>,
     // pub usb: usb::UsbCtrl<'a>,
     // pub watchdog: Watchdog<'a>,
     pub xosc: Xosc,
     // pub rtc: rtc::Rtc<'a>,
 }
 
-impl Rp2350DefaultPeripherals {
+impl<'a> Rp2350DefaultPeripherals<'a> {
     pub fn new() -> Self {
         Self {
             // adc: adc::Adc::new(),
             clocks: Clocks::new(),
             // i2c0: i2c::I2c::new_i2c0(),
-            // pins: RPPins::new(),
+            pins: RPPins::new(),
             // pio0: Pio::new_pio0(),
             // pio1: Pio::new_pio1(),
             // pwm: pwm::Pwm::new(),
@@ -157,8 +157,8 @@ impl Rp2350DefaultPeripherals {
             // spi0: spi::Spi::new_spi0(),
             // sysinfo: sysinfo::SysInfo::new(),
             // timer: RPTimer::new(),
-            // uart0: Uart::new_uart0(),
-            // uart1: Uart::new_uart1(),
+            uart0: Uart::new_uart0(),
+            uart1: Uart::new_uart1(),
             // usb: usb::UsbCtrl::new(),
             // watchdog: Watchdog::new(),
             xosc: Xosc::new(),
@@ -170,7 +170,7 @@ impl Rp2350DefaultPeripherals {
         // self.pwm.set_clocks(&self.clocks);
         // self.watchdog.resolve_dependencies(&self.resets);
         // self.spi0.set_clocks(&self.clocks);
-        // self.uart0.set_clocks(&self.clocks);
+        self.uart0.set_clocks(&self.clocks);
         // kernel::deferred_call::DeferredCallClient::register(&self.uart0);
         // kernel::deferred_call::DeferredCallClient::register(&self.uart1);
         // kernel::deferred_call::DeferredCallClient::register(&self.rtc);
@@ -180,8 +180,8 @@ impl Rp2350DefaultPeripherals {
     }
 }
 
-impl InterruptService for Rp2350DefaultPeripherals {
-    unsafe fn service_interrupt(&self, interrupt: u32) -> bool {
+impl<'a> InterruptService for Rp2350DefaultPeripherals<'a> {
+    unsafe fn service_interrupt(&self, _interrupt: u32) -> bool {
         // match interrupt {
         //     interrupts::PIO0_IRQ_0 => {
         //         // As the current PIO interface does not provide support for interrupts, they are

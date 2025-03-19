@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 // Copyright Tock Contributors 2022.
 
-//! GPIO, RP2040
+//! GPIO, RP2350
 //!
 //! ### Author
 //! * Ioana Culic <ioana.culic@wyliodrin.com>
@@ -110,19 +110,11 @@ register_bitfields![u32,
         /// interrupt to processors, after override is applied
         IRQTOPROC OFFSET(26) NUMBITS(1) [],
         /// interrupt from pad before override is applied
-        IRQFROMPAD OFFSET(24) NUMBITS(1) [],
-        /// input signal to peripheral, after override is applied
-        INTOPERI OFFSET(19) NUMBITS(1) [],
-        /// input signal from pad, before override is applied
-        INFROMPAD OFFSET(17) NUMBITS(1) [],
+        IRQFROMPAD OFFSET(17) NUMBITS(1) [],
         /// output enable to pad after register override is applied
         OETOPAD OFFSET(13) NUMBITS(1) [],
-        /// output enable from selected peripheral, before registeroverride is applied
-        OEFROMPERI OFFSET(12) NUMBITS(1) [],
         /// output signal to pad after register override is applied
         OUTTOPAD OFFSET(9) NUMBITS(1) [],
-        /// output signal from selected peripheral, before registeroverride is applied
-        OUTFROMPERI OFFSET(8) NUMBITS(1) []
     ],
     GPIOx_CTRL [
         /// interrupt override?
@@ -140,14 +132,14 @@ register_bitfields![u32,
             DriveHigh = 3
         ],
         /// output enable override
-        OEOVER OFFSET(12) NUMBITS(2) [
+        OEOVER OFFSET(14) NUMBITS(2) [
             EnableSignal = 0,
             EnableInverseSignal = 1,
             Disable = 2,
             Enable = 3
         ],
         /// output override
-        OUTOVER OFFSET(8) NUMBITS(2) [
+        OUTOVER OFFSET(12) NUMBITS(2) [
             Signal = 0,
             InverseSignal = 1,
             Low = 2,

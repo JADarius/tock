@@ -11,7 +11,7 @@ use kernel::hil::uart::{
 };
 use kernel::utilities::cells::{OptionalCell, TakeCell};
 use kernel::utilities::registers::interfaces::{ReadWriteable, Readable, Writeable};
-use kernel::utilities::registers::{register_bitfields, register_structs, ReadOnly, ReadWrite};
+use kernel::utilities::registers::{register_bitfields, register_structs, ReadWrite};
 use kernel::utilities::StaticRef;
 use kernel::ErrorCode;
 
@@ -20,342 +20,311 @@ use crate::clocks;
 register_structs! {
     /// controls serial port
     UartRegisters {
+        /// Data Register, UARTDR
         (0x000 => uartdr: ReadWrite<u32, UARTDR::Register>),
-
+        /// Receive Status Register/Error Clear Register, UARTRSR/UARTECR
         (0x004 => uartrsr: ReadWrite<u32, UARTRSR::Register>),
         (0x008 => _reserved0),
-
-        (0x018 => uartfr: ReadOnly<u32, UARTFR::Register>),
-        (0x01c => _reserved1),
-
+        /// Flag Register, UARTFR
+        (0x018 => uartfr: ReadWrite<u32, UARTFR::Register>),
+        (0x01C => _reserved1),
+        /// IrDA Low-Power Counter Register, UARTILPR
         (0x020 => uartilpr: ReadWrite<u32, UARTILPR::Register>),
-
+        /// Integer Baud Rate Register, UARTIBRD
         (0x024 => uartibrd: ReadWrite<u32, UARTIBRD::Register>),
-
+        /// Fractional Baud Rate Register, UARTFBRD
         (0x028 => uartfbrd: ReadWrite<u32, UARTFBRD::Register>),
-
-        (0x02c => uartlcr_h: ReadWrite<u32, UARTLCR_H::Register>),
-
+        /// Line Control Register, UARTLCR_H
+        (0x02C => uartlcr_h: ReadWrite<u32, UARTLCR_H::Register>),
+        /// Control Register, UARTCR
         (0x030 => uartcr: ReadWrite<u32, UARTCR::Register>),
-
+        /// Interrupt FIFO Level Select Register, UARTIFLS
         (0x034 => uartifls: ReadWrite<u32, UARTIFLS::Register>),
-
+        /// Interrupt Mask Set/Clear Register, UARTIMSC
         (0x038 => uartimsc: ReadWrite<u32, UARTIMSC::Register>),
-
-        (0x03c => uartris: ReadOnly<u32, UARTRIS::Register>),
-
-        (0x040 => uartmis: ReadOnly<u32, UARTMIS::Register>),
-
+        /// Raw Interrupt Status Register, UARTRIS
+        (0x03C => uartris: ReadWrite<u32, UARTRIS::Register>),
+        /// Masked Interrupt Status Register, UARTMIS
+        (0x040 => uartmis: ReadWrite<u32, UARTMIS::Register>),
+        /// Interrupt Clear Register, UARTICR
         (0x044 => uarticr: ReadWrite<u32, UARTICR::Register>),
-
+        /// DMA Control Register, UARTDMACR
         (0x048 => uartdmacr: ReadWrite<u32, UARTDMACR::Register>),
-        (0x04c => _reserved2),
-
-        (0xfe0 => uartperiphid0: ReadOnly<u32, UARTPERIPHID0::Register>),
-
-        (0xfe4 => uartperiphid1: ReadOnly<u32, UARTPERIPHID1::Register>),
-
-        (0xfe8 => uartperiphid2: ReadOnly<u32, UARTPERIPHID2::Register>),
-
-        (0xfec => uartperiphid3: ReadOnly<u32, UARTPERIPHID3::Register>),
-
-        (0xff0 => uartpcellid0: ReadOnly<u32, UARTPCELLID0::Register>),
-
-        (0xff4 => uartpcellid1: ReadOnly<u32, UARTPCELLID1::Register>),
-
-        (0xff8 => uartpcellid2: ReadOnly<u32, UARTPCELLID2::Register>),
-
-        (0xffc => uartpcellid3: ReadOnly<u32, UARTPCELLID3::Register>),
-
+        (0x04C => _reserved2),
+        /// UARTPeriphID0 Register
+        (0xFE0 => uartperiphid0: ReadWrite<u32>),
+        /// UARTPeriphID1 Register
+        (0xFE4 => uartperiphid1: ReadWrite<u32, UARTPERIPHID1::Register>),
+        /// UARTPeriphID2 Register
+        (0xFE8 => uartperiphid2: ReadWrite<u32, UARTPERIPHID2::Register>),
+        /// UARTPeriphID3 Register
+        (0xFEC => uartperiphid3: ReadWrite<u32>),
+        /// UARTPCellID0 Register
+        (0xFF0 => uartpcellid0: ReadWrite<u32>),
+        /// UARTPCellID1 Register
+        (0xFF4 => uartpcellid1: ReadWrite<u32>),
+        /// UARTPCellID2 Register
+        (0xFF8 => uartpcellid2: ReadWrite<u32>),
+        /// UARTPCellID3 Register
+        (0xFFC => uartpcellid3: ReadWrite<u32>),
         (0x1000 => @END),
     }
 }
 
-register_bitfields! [u32,
-    /// data register
-    UARTDR [
-        /// data bytes
-        DATA OFFSET(0) NUMBITS(8) [],
-        /// framing error
-        FE OFFSET(8) NUMBITS(1) [],
-        /// parity error
-        PE OFFSET(9) NUMBITS(1) [],
-        /// break error
-        BE OFFSET(10) NUMBITS(1) [],
-        /// overrun error
-        OE OFFSET(11) NUMBITS(1) []
+register_bitfields![u32,
+UARTDR [
+    /// Overrun error. This bit is set to 1 if data is received and the receive FIFO is
+    OE OFFSET(11) NUMBITS(1) [],
+    /// Break error. This bit is set to 1 if a break condition was detected, indicating
+    BE OFFSET(10) NUMBITS(1) [],
+    /// Parity error. When set to 1, it indicates that the parity of the received data c
+    PE OFFSET(9) NUMBITS(1) [],
+    /// Framing error. When set to 1, it indicates that the received character did not h
+    FE OFFSET(8) NUMBITS(1) [],
+    /// Receive (read) data character. Transmit (write) data character.
+    DATA OFFSET(0) NUMBITS(8) []
+],
+UARTRSR [
+    /// Overrun error. This bit is set to 1 if data is received and the FIFO is already
+    OE OFFSET(3) NUMBITS(1) [],
+    /// Break error. This bit is set to 1 if a break condition was detected, indicating
+    BE OFFSET(2) NUMBITS(1) [],
+    /// Parity error. When set to 1, it indicates that the parity of the received data c
+    PE OFFSET(1) NUMBITS(1) [],
+    /// Framing error. When set to 1, it indicates that the received character did not h
+    FE OFFSET(0) NUMBITS(1) []
+],
+UARTFR [
+    /// Ring indicator. This bit is the complement of the UART ring indicator, nUARTRI,
+    RI OFFSET(8) NUMBITS(1) [],
+    /// Transmit FIFO empty. The meaning of this bit depends on the state of the FEN bit
+    TXFE OFFSET(7) NUMBITS(1) [],
+    /// Receive FIFO full. The meaning of this bit depends on the state of the FEN bit i
+    RXFF OFFSET(6) NUMBITS(1) [],
+    /// Transmit FIFO full. The meaning of this bit depends on the state of the FEN bit
+    TXFF OFFSET(5) NUMBITS(1) [],
+    /// Receive FIFO empty. The meaning of this bit depends on the state of the FEN bit
+    RXFE OFFSET(4) NUMBITS(1) [],
+    /// UART busy. If this bit is set to 1, the UART is busy transmitting data. This bit
+    BUSY OFFSET(3) NUMBITS(1) [],
+    /// Data carrier detect. This bit is the complement of the UART data carrier detect,
+    DCD OFFSET(2) NUMBITS(1) [],
+    /// Data set ready. This bit is the complement of the UART data set ready, nUARTDSR,
+    DSR OFFSET(1) NUMBITS(1) [],
+    /// Clear to send. This bit is the complement of the UART clear to send, nUARTCTS, m
+    CTS OFFSET(0) NUMBITS(1) []
+],
+UARTILPR [
+    /// 8-bit low-power divisor value. These bits are cleared to 0 at reset.
+    ILPDVSR OFFSET(0) NUMBITS(8) []
+],
+UARTIBRD [
+    /// The integer baud rate divisor. These bits are cleared to 0 on reset.
+    BAUD_DIVINT OFFSET(0) NUMBITS(16) []
+],
+UARTFBRD [
+    /// The fractional baud rate divisor. These bits are cleared to 0 on reset.
+    BAUD_DIVFRAC OFFSET(0) NUMBITS(6) []
+],
+UARTLCR_H [
+    /// Stick parity select. 0 = stick parity is disabled 1 = either: * if the EPS bit i
+    SPS OFFSET(7) NUMBITS(1) [],
+    /// Word length. These bits indicate the number of data bits transmitted or received
+    WLEN OFFSET(5) NUMBITS(2) [
+        BITS_5 = 0b00,
+        BITS_6 = 0b01,
+        BITS_7 = 0b10,
+        BITS_8 = 0b11,
     ],
-    /// receive status register/ error clear register
-    UARTRSR [
-        /// framing error
-        FE OFFSET(0) NUMBITS(1) [],
-        /// parity error
-        PE OFFSET(1) NUMBITS(1) [],
-        /// break error
-        BE OFFSET(2) NUMBITS(1) [],
-        /// overrun error
-        OE OFFSET(3) NUMBITS(1) []
+    /// Enable FIFOs: 0 = FIFOs are disabled (character mode) that is, the FIFOs become
+    FEN OFFSET(4) NUMBITS(1) [],
+    /// Two stop bits select. If this bit is set to 1, two stop bits are transmitted at
+    STP2 OFFSET(3) NUMBITS(1) [],
+    /// Even parity select. Controls the type of parity the UART uses during transmissio
+    EPS OFFSET(2) NUMBITS(1) [],
+    /// Parity enable: 0 = parity is disabled and no parity bit added to the data frame
+    PEN OFFSET(1) NUMBITS(1) [],
+    /// Send break. If this bit is set to 1, a low-level is continually output on the UA
+    BRK OFFSET(0) NUMBITS(1) []
+],
+UARTCR [
+    /// CTS hardware flow control enable. If this bit is set to 1, CTS hardware flow con
+    CTSEN OFFSET(15) NUMBITS(1) [],
+    /// RTS hardware flow control enable. If this bit is set to 1, RTS hardware flow con
+    RTSEN OFFSET(14) NUMBITS(1) [],
+    /// This bit is the complement of the UART Out2 (nUARTOut2) modem status output. Tha
+    OUT2 OFFSET(13) NUMBITS(1) [],
+    /// This bit is the complement of the UART Out1 (nUARTOut1) modem status output. Tha
+    OUT1 OFFSET(12) NUMBITS(1) [],
+    /// Request to send. This bit is the complement of the UART request to send, nUARTRT
+    RTS OFFSET(11) NUMBITS(1) [],
+    /// Data transmit ready. This bit is the complement of the UART data transmit ready,
+    DTR OFFSET(10) NUMBITS(1) [],
+    /// Receive enable. If this bit is set to 1, the receive section of the UART is enab
+    RXE OFFSET(9) NUMBITS(1) [],
+    /// Transmit enable. If this bit is set to 1, the transmit section of the UART is en
+    TXE OFFSET(8) NUMBITS(1) [],
+    /// Loopback enable. If this bit is set to 1 and the SIREN bit is set to 1 and the S
+    LBE OFFSET(7) NUMBITS(1) [],
+    /// SIR low-power IrDA mode. This bit selects the IrDA encoding mode. If this bit is
+    SIRLP OFFSET(2) NUMBITS(1) [],
+    /// SIR enable: 0 = IrDA SIR ENDEC is disabled. nSIROUT remains LOW (no light pulse
+    SIREN OFFSET(1) NUMBITS(1) [],
+    /// UART enable: 0 = UART is disabled. If the UART is disabled in the middle of tran
+    UARTEN OFFSET(0) NUMBITS(1) []
+],
+UARTIFLS [
+    /// Receive interrupt FIFO level select. The trigger points for the receive interrup
+    RXIFLSEL OFFSET(3) NUMBITS(3) [
+        FIFO_1_8 = 0b000,
+        FIFO_1_4 = 0b001,
+        FIFO_1_2 = 0b010,
+        FIFO_3_4 = 0b011,
+        FIFO_7_8 = 0b100,
     ],
-    /// flag register
-    UARTFR  [
-        /// clear to send
-        CTS OFFSET(0) NUMBITS(1) [],
-        /// data set ready
-        DSR OFFSET(1) NUMBITS(1) [],
-        /// data carrier detect
-        DCD OFFSET(2) NUMBITS(1) [],
-        /// busy
-        BUSY OFFSET(3) NUMBITS(1) [],
-        /// receive FIFO empty
-        RXFE OFFSET(4) NUMBITS(1) [],
-        /// transmit FIFO full
-        TXFF OFFSET(5) NUMBITS(1) [],
-        /// receive FIFO full
-        RXFF OFFSET(6) NUMBITS(1) [],
-        /// transmit FIFO empty
-        TXFE OFFSET(7) NUMBITS(1) [],
-        /// ring indicator
-        RI OFFSET(8) NUMBITS(1) []
-    ],
-    /// IrDA low-power counter register
-    UARTILPR [
-        /// 8-bit low-power divisor value
-        ILPDVSR OFFSET(0) NUMBITS(8) []
-    ],
-    /// integer baud rate register
-    UARTIBRD [
-        /// the integer baud rate divisor
-        BAUD_DIVINT OFFSET(0) NUMBITS(16) []
-    ],
-    /// fractional baud rate register
-    UARTFBRD [
-        /// the fractional baud rate divisor
-        BAUD_DIVFRAC OFFSET(0) NUMBITS(6) []
-    ],
-    /// line control register
-    UARTLCR_H [
-        /// send break
-        BRK OFFSET(0) NUMBITS(1) [],
-        /// parity enable
-        PEN OFFSET(1) NUMBITS(1) [],
-        /// even parity select
-        EPS OFFSET(2) NUMBITS(1) [],
-        /// two stop bits select
-        STP2 OFFSET(3) NUMBITS(1) [],
-        /// enable FIFOs
-        FEN OFFSET(4) NUMBITS(1) [],
-        /// word length
-        WLEN OFFSET(5) NUMBITS(2) [
-            BITS_8 = 0b11,
-            BITS_7 = 0b10,
-            BITS_6 = 0b01,
-            BITS_5 = 0b00
-        ],
-        /// stick parity select
-        SPS OFFSET(7) NUMBITS(1) []
-    ],
-    /// control register
-    UARTCR [
-        /// UART enable
-        UARTEN OFFSET(0) NUMBITS(1) [],
-        /// SIR enable
-        SIREN OFFSET(1) NUMBITS(1) [],
-        /// SIR low-power IrDA mode
-        SIRLP OFFSET(2) NUMBITS(1) [],
-
-        //RESERVED OFFSET(3) NUMBITS(3) [],
-        /// loopback enable
-        LBE OFFSET(7) NUMBITS(1) [],
-        /// transmit enable
-        TXE OFFSET(8) NUMBITS(1) [],
-        /// receive enable
-        RXE OFFSET(9) NUMBITS(1) [],
-        /// data transmit ready
-        DTR OFFSET(10) NUMBITS(1) [],
-        /// request to send
-        RTS OFFSET(11) NUMBITS(1) [],
-        /// the complement of the UART Out1 (nUARTOut1) modem status output
-        OUT1 OFFSET(12) NUMBITS(1) [],
-        /// the complement of the UART Out2 (nUARTOut2) modem status output
-        OUT2 OFFSET(13) NUMBITS(1) [],
-        /// RTS hardware flow control enable
-        RTSEN OFFSET(14) NUMBITS(1) [],
-        /// CTS hardware flow control enable
-        CTSEN OFFSET(15) NUMBITS(1) []
-    ],
-    /// interrupt FIFO level select register
-    UARTIFLS [
-        /// transmit interrupt FIFO level select
-        TXIFLSEL OFFSET(0) NUMBITS(3) [
-            FIFO_1_8 = 0b000,
-            FIFO_1_4 = 0b001,
-            FIFO_1_2 = 0b010,
-            FIFO_3_4 = 0b011,
-            FIFO_7_8 = 0b100,
-        ],
-        /// receive interrupt FIFO level select
-        RXIFLSEL OFFSET(3) NUMBITS(3) [
-            FIFO_1_8 = 0b000,
-            FIFO_1_4 = 0b001,
-            FIFO_1_2 = 0b010,
-            FIFO_3_4 = 0b011,
-            FIFO_7_8 = 0b100,
-        ]
-    ],
-
-    /// interrupt mask set/clear register
-    UARTIMSC [
-        /// nUARTRI modem interrupt mask
-        RIMIM OFFSET(0) NUMBITS(1) [],
-        /// nUARTCTS modem interrupt mask
-        CTSMIM OFFSET(1) NUMBITS(1) [],
-        /// nUARTDCD modem interrupt mask
-        DCDMIM OFFSET(2) NUMBITS(1) [],
-        /// nUARTDSR modem interrupt mask
-        DSRMIM OFFSET(3) NUMBITS(1) [],
-        /// receive interrupt mask
-        RXIM OFFSET(4) NUMBITS(1) [],
-        /// transmit interrupt mask
-        TXIM OFFSET(5) NUMBITS(1) [],
-        /// receive timeout interrupt mask
-        RTIM OFFSET(6) NUMBITS(1) [],
-        /// framing error interrupt mask
-        FEIM OFFSET(7) NUMBITS(1) [],
-        /// parity error interrupt mask
-        PEIM OFFSET(8) NUMBITS(1) [],
-        /// break error interrupt mask
-        BEIM OFFSET(9) NUMBITS(1) [],
-        /// overrun error interrupt mask
-        OEIM OFFSET(10) NUMBITS(1) []
-    ],
-    /// raw interrupt status register
-    UARTRIS [
-        /// nUARTRI modem interrupt status
-        RIRMIS OFFSET(0) NUMBITS(1) [],
-        /// nUARTCTS modem interrupt status
-        CTSRMIS OFFSET(1) NUMBITS(1) [],
-        /// nUARTDCD modem interrupt status
-        DCDRMIS OFFSET(2) NUMBITS(1) [],
-        /// nUARTDSR modem interrupt status
-        DSRRMIS OFFSET(3) NUMBITS(1) [],
-        /// receive interrupt status
-        RXRIS OFFSET(4) NUMBITS(1) [],
-        /// transmit interrupt status
-        TXRIS OFFSET(5) NUMBITS(1) [],
-        /// receive timeout interrupt status
-        RTRIS OFFSET(6) NUMBITS(1) [],
-        /// framing error interrupt status
-        FERIS OFFSET(7) NUMBITS(1) [],
-        /// parity error interrupt status
-        PERIS OFFSET(8) NUMBITS(1) [],
-        /// break error interrupt status
-        BERIS OFFSET(9) NUMBITS(1) [],
-        /// overrun error interrupt status
-        OERIS OFFSET(10) NUMBITS(1) []
-    ],
-    /// masked interrupt status register
-    UARTMIS [
-        /// nUARTRI modem masked interrupt status
-        RIMMIS OFFSET(0) NUMBITS(1) [],
-        /// nUARTCTS modem masked interrupt status
-        CTSMMIS OFFSET(1) NUMBITS(1) [],
-        /// nUARTDCD modem masked interrupt status
-        DCDMMIS OFFSET(2) NUMBITS(1) [],
-        /// nUARTDSR modem masked interrupt status
-        DSRMMIS OFFSET(3) NUMBITS(1) [],
-        /// receive masked interrupt status
-        RXMIS OFFSET(4) NUMBITS(1) [],
-        /// transmit masked interrupt status
-        TXMIS OFFSET(5) NUMBITS(1) [],
-        /// receive timeout masked interrupt status
-        RTMIS OFFSET(6) NUMBITS(1) [],
-        /// framing error masked interrupt status
-        FEMIS OFFSET(7) NUMBITS(1) [],
-        /// parity error masked interrupt status
-        PEMIS OFFSET(8) NUMBITS(1) [],
-        /// break error masked interrupt status
-        BEMIS OFFSET(9) NUMBITS(1) [],
-        /// overrun error masked interrupt status
-        OEMIS OFFSET(10) NUMBITS(1) []
-    ],
-    /// interrupt clear register
-    UARTICR [
-        /// nUARTRI modem interrupt clear
-        RIMIC OFFSET(0) NUMBITS(1) [],
-        /// nUARTCTS modem interrupt clear
-        CTSMIC OFFSET(1) NUMBITS(1) [],
-        /// nUARTDCD modem interrupt clear
-        DCDMIC OFFSET(2) NUMBITS(1) [],
-        /// nUARTDSR modem interrupt clear
-        DSRMIC OFFSET(3) NUMBITS(1) [],
-        /// receive interrupt clear
-        RXIC OFFSET(4) NUMBITS(1) [],
-        /// transmit interrupt clear
-        TXIC OFFSET(5) NUMBITS(1) [],
-        /// receive timeout interrupt clear
-        RTIC OFFSET(6) NUMBITS(1) [],
-        /// framing error interrupt clear
-        FEIC OFFSET(7) NUMBITS(1) [],
-        /// parity error interrupt clear
-        PEIC OFFSET(8) NUMBITS(1) [],
-        /// break error interrupt clear
-        BEIC OFFSET(9) NUMBITS(1) [],
-        /// overrun error interrupt clear
-        OEIC OFFSET(10) NUMBITS(1) []
-    ],
-    /// DMA control register
-    UARTDMACR [
-        /// Receive DMA enable
-        RXDMAE OFFSET(0) NUMBITS(1) [],
-        /// transmit DMA enable
-        TXDMAE OFFSET(1) NUMBITS(1) [],
-        /// DMA on error
-        DMAONERR OFFSET(2) NUMBITS(1) []
-    ],
-    /// UARTPeriphID0 register
-    UARTPERIPHID0 [
-        /// these bits read back as 0x11
-        PARTNUMBER0 OFFSET(0) NUMBITS(8) []
-    ],
-    /// UARTPeriphID1 register
-    UARTPERIPHID1 [
-        /// these bits read back as 0x0
-        PARTNUMBER1 OFFSET(0) NUMBITS(4) [],
-        /// these bits read back as 0x1
-        DESIGNER0 OFFSET(4) NUMBITS(4) []
-    ],
-    /// UARTPeriphID2 register
-    UARTPERIPHID2 [
-        /// these bits read back as 0x4
-        DESIGNER1 OFFSET(0) NUMBITS(4) [],
-        /// this field depends on the revision of the UART: r1p0 0x0 r1p1 0x1 r1p3 0x2 r1p4 0x2 r1p5 0x3
-        REVISION OFFSET(4) NUMBITS(4) []
-    ],
-    /// UARTPeriphID3 register
-    UARTPERIPHID3 [
-        /// these bits read back as 0x00
-        CONFIGURATION OFFSET(0) NUMBITS(8) []
-    ],
-    /// UARTPCellID0 register
-    UARTPCELLID0 [
-        /// these bits read back as 0x0D
-        UARTPCELLID0 OFFSET(0) NUMBITS(8) []
-    ],
-    /// UARTPCellID1 register
-    UARTPCELLID1 [
-        /// these bits read back as 0xF0
-        UARTPCELLID1 OFFSET(0) NUMBITS(8) []
-    ],
-    /// UARTPCellID2 register
-    UARTPCELLID2 [
-        /// these bits read back as 0x05
-        UARTPCELLID2 OFFSET(0) NUMBITS(8) []
-    ],
-    /// UARTPCellID3 register
-    UARTPCELLID3 [
-        /// these bits read back as 0xB1
-        UARTPCELLID3 OFFSET(0) NUMBITS(8) []
-    ]
+    /// Transmit interrupt FIFO level select. The trigger points for the transmit interr
+    TXIFLSEL OFFSET(0) NUMBITS(3) []
+],
+UARTIMSC [
+    /// Overrun error interrupt mask. A read returns the current mask for the UARTOEINTR
+    OEIM OFFSET(10) NUMBITS(1) [],
+    /// Break error interrupt mask. A read returns the current mask for the UARTBEINTR i
+    BEIM OFFSET(9) NUMBITS(1) [],
+    /// Parity error interrupt mask. A read returns the current mask for the UARTPEINTR
+    PEIM OFFSET(8) NUMBITS(1) [],
+    /// Framing error interrupt mask. A read returns the current mask for the UARTFEINTR
+    FEIM OFFSET(7) NUMBITS(1) [],
+    /// Receive timeout interrupt mask. A read returns the current mask for the UARTRTIN
+    RTIM OFFSET(6) NUMBITS(1) [],
+    /// Transmit interrupt mask. A read returns the current mask for the UARTTXINTR inte
+    TXIM OFFSET(5) NUMBITS(1) [],
+    /// Receive interrupt mask. A read returns the current mask for the UARTRXINTR inter
+    RXIM OFFSET(4) NUMBITS(1) [],
+    /// nUARTDSR modem interrupt mask. A read returns the current mask for the UARTDSRIN
+    DSRMIM OFFSET(3) NUMBITS(1) [],
+    /// nUARTDCD modem interrupt mask. A read returns the current mask for the UARTDCDIN
+    DCDMIM OFFSET(2) NUMBITS(1) [],
+    /// nUARTCTS modem interrupt mask. A read returns the current mask for the UARTCTSIN
+    CTSMIM OFFSET(1) NUMBITS(1) [],
+    /// nUARTRI modem interrupt mask. A read returns the current mask for the UARTRIINTR
+    RIMIM OFFSET(0) NUMBITS(1) []
+],
+UARTRIS [
+    /// Overrun error interrupt status. Returns the raw interrupt state of the UARTOEINT
+    OERIS OFFSET(10) NUMBITS(1) [],
+    /// Break error interrupt status. Returns the raw interrupt state of the UARTBEINTR
+    BERIS OFFSET(9) NUMBITS(1) [],
+    /// Parity error interrupt status. Returns the raw interrupt state of the UARTPEINTR
+    PERIS OFFSET(8) NUMBITS(1) [],
+    /// Framing error interrupt status. Returns the raw interrupt state of the UARTFEINT
+    FERIS OFFSET(7) NUMBITS(1) [],
+    /// Receive timeout interrupt status. Returns the raw interrupt state of the UARTRTI
+    RTRIS OFFSET(6) NUMBITS(1) [],
+    /// Transmit interrupt status. Returns the raw interrupt state of the UARTTXINTR int
+    TXRIS OFFSET(5) NUMBITS(1) [],
+    /// Receive interrupt status. Returns the raw interrupt state of the UARTRXINTR inte
+    RXRIS OFFSET(4) NUMBITS(1) [],
+    /// nUARTDSR modem interrupt status. Returns the raw interrupt state of the UARTDSRI
+    DSRRMIS OFFSET(3) NUMBITS(1) [],
+    /// nUARTDCD modem interrupt status. Returns the raw interrupt state of the UARTDCDI
+    DCDRMIS OFFSET(2) NUMBITS(1) [],
+    /// nUARTCTS modem interrupt status. Returns the raw interrupt state of the UARTCTSI
+    CTSRMIS OFFSET(1) NUMBITS(1) [],
+    /// nUARTRI modem interrupt status. Returns the raw interrupt state of the UARTRIINT
+    RIRMIS OFFSET(0) NUMBITS(1) []
+],
+UARTMIS [
+    /// Overrun error masked interrupt status. Returns the masked interrupt state of the
+    OEMIS OFFSET(10) NUMBITS(1) [],
+    /// Break error masked interrupt status. Returns the masked interrupt state of the U
+    BEMIS OFFSET(9) NUMBITS(1) [],
+    /// Parity error masked interrupt status. Returns the masked interrupt state of the
+    PEMIS OFFSET(8) NUMBITS(1) [],
+    /// Framing error masked interrupt status. Returns the masked interrupt state of the
+    FEMIS OFFSET(7) NUMBITS(1) [],
+    /// Receive timeout masked interrupt status. Returns the masked interrupt state of t
+    RTMIS OFFSET(6) NUMBITS(1) [],
+    /// Transmit masked interrupt status. Returns the masked interrupt state of the UART
+    TXMIS OFFSET(5) NUMBITS(1) [],
+    /// Receive masked interrupt status. Returns the masked interrupt state of the UARTR
+    RXMIS OFFSET(4) NUMBITS(1) [],
+    /// nUARTDSR modem masked interrupt status. Returns the masked interrupt state of th
+    DSRMMIS OFFSET(3) NUMBITS(1) [],
+    /// nUARTDCD modem masked interrupt status. Returns the masked interrupt state of th
+    DCDMMIS OFFSET(2) NUMBITS(1) [],
+    /// nUARTCTS modem masked interrupt status. Returns the masked interrupt state of th
+    CTSMMIS OFFSET(1) NUMBITS(1) [],
+    /// nUARTRI modem masked interrupt status. Returns the masked interrupt state of the
+    RIMMIS OFFSET(0) NUMBITS(1) []
+],
+UARTICR [
+    /// Overrun error interrupt clear. Clears the UARTOEINTR interrupt.
+    OEIC OFFSET(10) NUMBITS(1) [],
+    /// Break error interrupt clear. Clears the UARTBEINTR interrupt.
+    BEIC OFFSET(9) NUMBITS(1) [],
+    /// Parity error interrupt clear. Clears the UARTPEINTR interrupt.
+    PEIC OFFSET(8) NUMBITS(1) [],
+    /// Framing error interrupt clear. Clears the UARTFEINTR interrupt.
+    FEIC OFFSET(7) NUMBITS(1) [],
+    /// Receive timeout interrupt clear. Clears the UARTRTINTR interrupt.
+    RTIC OFFSET(6) NUMBITS(1) [],
+    /// Transmit interrupt clear. Clears the UARTTXINTR interrupt.
+    TXIC OFFSET(5) NUMBITS(1) [],
+    /// Receive interrupt clear. Clears the UARTRXINTR interrupt.
+    RXIC OFFSET(4) NUMBITS(1) [],
+    /// nUARTDSR modem interrupt clear. Clears the UARTDSRINTR interrupt.
+    DSRMIC OFFSET(3) NUMBITS(1) [],
+    /// nUARTDCD modem interrupt clear. Clears the UARTDCDINTR interrupt.
+    DCDMIC OFFSET(2) NUMBITS(1) [],
+    /// nUARTCTS modem interrupt clear. Clears the UARTCTSINTR interrupt.
+    CTSMIC OFFSET(1) NUMBITS(1) [],
+    /// nUARTRI modem interrupt clear. Clears the UARTRIINTR interrupt.
+    RIMIC OFFSET(0) NUMBITS(1) []
+],
+UARTDMACR [
+    /// DMA on error. If this bit is set to 1, the DMA receive request outputs, UARTRXDM
+    DMAONERR OFFSET(2) NUMBITS(1) [],
+    /// Transmit DMA enable. If this bit is set to 1, DMA for the transmit FIFO is enabl
+    TXDMAE OFFSET(1) NUMBITS(1) [],
+    /// Receive DMA enable. If this bit is set to 1, DMA for the receive FIFO is enabled
+    RXDMAE OFFSET(0) NUMBITS(1) []
+],
+UARTPERIPHID0 [
+    /// These bits read back as 0x11
+    PARTNUMBER0 OFFSET(0) NUMBITS(8) []
+],
+UARTPERIPHID1 [
+    /// These bits read back as 0x1
+    DESIGNER0 OFFSET(4) NUMBITS(4) [],
+    /// These bits read back as 0x0
+    PARTNUMBER1 OFFSET(0) NUMBITS(4) []
+],
+UARTPERIPHID2 [
+    /// This field depends on the revision of the UART: r1p0 0x0 r1p1 0x1 r1p3 0x2 r1p4
+    REVISION OFFSET(4) NUMBITS(4) [],
+    /// These bits read back as 0x4
+    DESIGNER1 OFFSET(0) NUMBITS(4) []
+],
+UARTPERIPHID3 [
+    /// These bits read back as 0x00
+    CONFIGURATION OFFSET(0) NUMBITS(8) []
+],
+UARTPCELLID0 [
+    /// These bits read back as 0x0D
+    UARTPCELLID0 OFFSET(0) NUMBITS(8) []
+],
+UARTPCELLID1 [
+    /// These bits read back as 0xF0
+    UARTPCELLID1 OFFSET(0) NUMBITS(8) []
+],
+UARTPCELLID2 [
+    /// These bits read back as 0x05
+    UARTPCELLID2 OFFSET(0) NUMBITS(8) []
+],
+UARTPCELLID3 [
+    /// These bits read back as 0xB1
+    UARTPCELLID3 OFFSET(0) NUMBITS(8) []
+]
 ];
 
 #[derive(Copy, Clone, PartialEq)]
@@ -373,10 +342,10 @@ enum UARTStateRX {
 }
 
 const UART0_BASE: StaticRef<UartRegisters> =
-    unsafe { StaticRef::new(0x40034000 as *const UartRegisters) };
+    unsafe { StaticRef::new(0x40070000 as *const UartRegisters) };
 
 const UART1_BASE: StaticRef<UartRegisters> =
-    unsafe { StaticRef::new(0x40038000 as *const UartRegisters) };
+    unsafe { StaticRef::new(0x40078000 as *const UartRegisters) };
 
 pub struct Uart<'a> {
     registers: StaticRef<UartRegisters>,

@@ -8,7 +8,8 @@
 pub mod chip;
 pub mod clocks;
 // mod deferred_calls;
-// pub mod gpio;
+//pub mod gpio;
+pub mod gpio2;
 // pub mod i2c;
 // pub mod interrupts;
 // pub mod pio;
@@ -20,7 +21,7 @@ pub mod resets;
 // pub mod sysinfo;
 // pub mod test;
 // pub mod timer;
-// pub mod uart;
+pub mod uart;
 // pub mod usb;
 // pub mod watchdog;
 pub mod xosc;
